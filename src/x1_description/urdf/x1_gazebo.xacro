@@ -1,0 +1,61 @@
+<?xml version = "1.0"?>
+
+<robot name="ROSMASTER_X1" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- Wheels -->
+    <gazebo reference = "front_right_wheel">
+        <mu1>100000000000000.0</mu1>        <!-- High friction coeff to avoid slipage -->
+        <mu2>100000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10.0</kd>
+        <minDepth>0.001</minDepth>
+        <maxVel>0.1</maxVel>        
+        <fdir1>1 0 0</fdir1>                <!-- Direction of wheel rotation -->
+    </gazebo>
+
+    <gazebo reference = "front_left_wheel">
+        <mu1>100000000000000.0</mu1>        <!-- High friction coeff to avoid slipage -->
+        <mu2>100000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10.0</kd>
+        <minDepth>0.001</minDepth>
+        <maxVel>0.1</maxVel>        
+        <fdir1>1 0 0</fdir1>                <!-- Direction of wheel rotation -->
+    </gazebo>
+
+    <gazebo reference = "back_right_wheel">
+        <mu1>100000000000000.0</mu1>        <!-- High friction coeff to avoid slipage -->
+        <mu2>100000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10.0</kd>
+        <minDepth>0.001</minDepth>
+        <maxVel>0.1</maxVel>        
+        <fdir1>1 0 0</fdir1>                <!-- Direction of wheel rotation -->
+    </gazebo>
+
+    <gazebo reference = "back_left_wheel">
+        <mu1>100000000000000.0</mu1>        <!-- High friction coeff to avoid slipage -->
+        <mu2>100000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10.0</kd>
+        <minDepth>0.001</minDepth>
+        <maxVel>0.1</maxVel>        
+        <fdir1>1 0 0</fdir1>                <!-- Direction of wheel rotation -->
+    </gazebo>
+
+    <!-- Gazebo control related stuff
+    <gazebo>
+        <xacro:if value = "$(arg is_ignition)">
+            <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+                <parameters>$(find bumperbot_controller)/config/bumperbot_controllers.yaml</parameters>
+            </plugin>
+        </xacro:if>
+
+        <xacro:unless value="$(arg is_ignition)">
+            <plugin filename = "gz_ros2_control-system" name = "gz_ros2_control::GazeboSimROS2ControlPlugin">
+                <parameters>$(find bumperbot_controller)/config/bumperbot_controllers.yaml</parameters>
+            </plugin>
+        </xacro:unless>
+    </gazebo> -->
+
+</robot>

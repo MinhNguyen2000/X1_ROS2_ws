@@ -1,6 +1,9 @@
 <?xml version = "1.0"?>
 
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name = "ROSMASTER_X1">
+<robot name = "ROSMASTER_X1" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- Include Gazebo Parameters -->
+    <xacro:include filename="$(find x1_description)/urdf/x1_gazebo.xacro" />
+
     <!-- Material definitions -->
     <material name="Green">
         <color rgba="0 0.7 0 1"/>
@@ -41,6 +44,7 @@
             <origin xyz="${xyz}" rpy="${rpy}"/>
             <axis xyz="${axis}"/>
             <limit lower="${-pi}" upper="${pi}" effort="100" velocity="1"/>
+            <dynamics friction="1E-04"/>
         </joint>
     </xacro:macro>
 
@@ -69,7 +73,7 @@
     </xacro:common_link>
 
     <!-- Fixed Joints -->
-    <xacro:fixed_joint name="base_joint" parent="base_footprint" child="base_link" xyz="0.0 0.0 0.0815" rpy="0 0 0"/>
+    <xacro:fixed_joint name="base_joint" parent="base_footprint" child="base_link" xyz="0.0 0.0 0.0850" rpy="0 0 0"/>
     
     <link name="imu_link"/>
     <xacro:fixed_joint name="base_imu" parent="base_link" child="imu_link" xyz="-0.06 0.01 0.01" rpy="0 3.1415 1.5707"/>

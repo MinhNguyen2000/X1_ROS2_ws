@@ -68,7 +68,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='tf_footprint_base',
-        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'base_footprint', '40']
+        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'base_footprint']
     )
 
     # Spawn X1 model in Gazebo
