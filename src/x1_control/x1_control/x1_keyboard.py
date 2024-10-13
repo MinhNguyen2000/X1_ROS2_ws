@@ -68,8 +68,8 @@ class KeyboardControlNode(Node):
         super().__init__('keyboard_control')
         
         # Declare parameters with default values
-        self.linear_limit = self.declare_parameter('linear_speed_limit', 1.0).value
-        self.angular_limit = self.declare_parameter('angular_speed_limit', 5.0).value
+        self.linear_limit = self.declare_parameter('linear_speed_limit', 1.0).get_parameter_value().double_value
+        self.angular_limit = self.declare_parameter('angular_speed_limit', 5.0).get_parameter_value().double_value
 
         # Publisher
         self.vel_pub_ = self.create_publisher(Twist, 'cmd_vel', 10)
