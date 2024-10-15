@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import rclpy
 from rclpy.node import Node
@@ -42,27 +42,6 @@ speedBindings = {
     'e': (1, 1.1),      'E': (1, 1.1),
     'c': (1, .9),       'C': (1, .9),
 }
-
-def getKey(settings):
-    """
-    Function to read from terminal without waiting for the Enter/return key
-    """
-    
-    # Sets the terminal to "raw" mode to capture key press without Enter
-    tty.setraw(sys.stdin.fileno())
-
-    # Read the key press every 0.1 second
-    rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
-    if rlist: key = sys.stdin.read(1)
-    else: key = ''
-
-    # Restore the terminal's original setting after the keycap is captured
-    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
-    return key
-
-def vels(speed, turn):
-    return "currently:\tspeed %s\tturn %s " % (speed, turn)
-
 class KeyboardControlNode(Node):
     def __init__(self):
         super().__init__('keyboard_control')
@@ -70,6 +49,7 @@ class KeyboardControlNode(Node):
         # Declare parameters with default values
         self.linear_limit = self.declare_parameter('linear_speed_limit', 1.0).get_parameter_value().double_value
         self.angular_limit = self.declare_parameter('angular_speed_limit', 5.0).get_parameter_value().double_value
+        self.settings_ = termios.tcgetattr(sys.stdin)
 
         # Publisher
         self.vel_pub_ = self.create_publisher(Twist, 'cmd_vel', 10)
@@ -83,18 +63,45 @@ class KeyboardControlNode(Node):
         self.stop_ = False
         self.count_ = 0
 
-def main():
-    settings = termios.tcgetattr(sys.stdin)
+    def getKey(self):
+        """
+        Function to read from terminal without waiting for the Enter/return key
+        """
+        
+        # Sets the terminal to "raw" mode to capture key press without Enter
+        tty.setraw(sys.stdin.fileno())
 
+        # Read the key press every 0.1 second
+        rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
+        if rlist: key = sys.stdin.read(1)
+        else: key = ''
+
+        # Restore the terminal's original setting after the keycap is captured
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings_)
+        return key
+
+    def vels(self, speed, turn):
+        return "currently:\tspeed %s\tturn %s " % (speed, turn)
+
+
+def main():
     rclpy.init()
     kb_ctrl_node = KeyboardControlNode()
-
+    status = 0      # Count of how many time speed has been changed
     try:
         print(msg)
-        print(vels(kb_ctrl_node.speed_,kb_ctrl_node.turn_))
+        print(kb_ctrl_node.vels(kb_ctrl_node.speed_,kb_ctrl_node.turn_))
 
         while True:
-            key = getKey(settings)
+            key = kb_ctrl_node.getKey()
+            # Switch x and y speed
+            if key == "t" or key == "T": kb_ctrl_node.xspeed_switch_= not kb_ctrl_node.xspeed_switch_
+
+            # Stop control
+            elif key == "s" or key == "S":
+                kb_ctrl_node.stop_ = not kb_ctrl_node.stop_
+                print("Stop keyboard control: {}".format(kb_ctrl_node.stop_))
+
             # Change motion
             if key in moveBindings:
                 kb_ctrl_node.x_, kb_ctrl_node.th_ = moveBindings[key]
@@ -106,10 +113,16 @@ def main():
                 kb_ctrl_node.turn_ *= speedBindings[key][1]
                 if kb_ctrl_node.speed_ > kb_ctrl_node.linear_limit: 
                     kb_ctrl_node.speed_ = kb_ctrl_node.linear_limit
+                    print("Linear speed limit reached!")
                 if kb_ctrl_node.turn_ > kb_ctrl_node.angular_limit:
                     kb_ctrl_node.turn_ = kb_ctrl_node.angular_limit
-                print(vels(kb_ctrl_node.speed_, kb_ctrl_node.turn_))
+                    print("Angular speed limit reached!")
+                print(kb_ctrl_node.vels(kb_ctrl_node.speed_, kb_ctrl_node.turn_))
                 kb_ctrl_node.count_ = 0
+
+                # Reprint the message when the speed has been changed multiple times
+                if (status == 14): print(msg)
+                status = (status + 1) % 15
             
             # Force stop
             elif key == " ":
@@ -117,27 +130,28 @@ def main():
                 kb_ctrl_node.th_ = 0
 
             else:
-                kb_ctrl_node.count+= 1
-                if kb_ctrl_node > 4: 
+                kb_ctrl_node.count_+= 1
+                if kb_ctrl_node.count_ > 4: 
                     kb_ctrl_node.x_ = 0
                     kb_ctrl_node.th_ = 0
                 if key == "\x03": break
 
-            twist = Twist()
-            if kb_ctrl_node.xspeed_switch__:
-                twist.linear.x = kb_ctrl_node.speed_ * kb_ctrl_node.x
+            twist_msg = Twist()
+            if kb_ctrl_node.xspeed_switch_:
+                twist_msg.linear.x = kb_ctrl_node.speed_ * kb_ctrl_node.x_
             else:
-                twist.linear.y = kb_ctrl_node.speed_ * kb_ctrl_node.x
-            twist.angular.z = kb_ctrl_node.turn_ * kb_ctrl_node.th
+                twist_msg.linear.y = kb_ctrl_node.speed_ * kb_ctrl_node.x_
+            twist_msg.angular.z = kb_ctrl_node.turn_ * kb_ctrl_node.th_
 
-            kb_ctrl_node.vel_pub_.publish(twist)
+            if not kb_ctrl_node.stop_: kb_ctrl_node.vel_pub_.publish(twist_msg)
+            if kb_ctrl_node.stop_: kb_ctrl_node.vel_pub_.publish(Twist())
     except Exception as e:
         print(e)
     finally: # Stop the robot by publishing an empty Twist() message and reset the terminal settings
         print('Stopping the robot.')
-        kb_ctrl_node.pub.publish(Twist())  # Stop the robot by sending zero velocity
+        kb_ctrl_node.vel_pub_.publish(Twist())  # Stop the robot by sending zero velocity
         print('Restoring terminal settings.')
-        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)  # Restore terminal settings
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, kb_ctrl_node.settings_)  # Restore terminal settings
         print('Destroying node.')
         kb_ctrl_node.destroy_node()  # Explicitly destroy the node (optional)
         print('Shutting down ROS2 node.')
