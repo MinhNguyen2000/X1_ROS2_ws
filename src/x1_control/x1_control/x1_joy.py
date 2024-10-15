@@ -249,6 +249,7 @@ def main():
     except KeyboardInterrupt:
         print("Shutting down node.")
     finally:
+        joy_teleop.cancel()
         joy_teleop.destroy_node()
         rclpy.shutdown()
 

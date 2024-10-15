@@ -13,11 +13,21 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(action_msgs REQUIRED)
 
+# Install Python modules
 ament_python_install_package(${PROJECT_NAME})
 
+# Install launch files
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+# Install Python scripts
 install(PROGRAMS
   ${PROJECT_NAME}/x1_keyboard.py
   ${PROJECT_NAME}/x1_joy.py
+  ${PROJECT_NAME}/twist_joy.py
+  ${PROJECT_NAME}/turtlebot_joy.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from ament_index_python.packages import get_package_share_path
 
 from launch import LaunchDescription
@@ -19,6 +20,8 @@ def generate_launch_description():
     urdf_tutorial_path = get_package_share_path('x1_description')
     default_model_path = urdf_tutorial_path / 'urdf/x1.urdf.xacro'
     default_rviz_config_path = urdf_tutorial_path / 'rviz/display.rviz'
+    print(default_model_path)
+    print(default_rviz_config_path)
 
     gui_arg = DeclareLaunchArgument(
         name='gui', 
@@ -73,7 +76,7 @@ def generate_launch_description():
     )
 
     imu_filter_config = os.path.join(              # Complete path of the imu parameter file
-        get_package_share_directory('X1_bringup'),
+        get_package_share_directory('x1_bringup'),
         'config',
         'imu_filter_param.yaml'
     )
@@ -102,9 +105,9 @@ def generate_launch_description():
             '/ekf_x1_x3_launch.py'])
     )
 
-    yahboom_joy_node = Node(
-        package='yahboomcar_ctrl',
-        executable='yahboom_joy_X3',
+    x1_joy_node = Node(
+        package='x1_control',
+        executable='x1_joy',
     )
 
     return LaunchDescription([
@@ -119,6 +122,6 @@ def generate_launch_description():
         driver_node,
         base_node,
         imu_filter_node,
-        ekf_node,
-        yahboom_joy_node
+        # ekf_node,
+        x1_joy_node
     ])
