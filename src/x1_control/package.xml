@@ -11,8 +11,12 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
+  <!-- Dependencies for the controller launch file -->
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+  
   <!-- Runtime dependencies -->
-   <exec_depend>rclcpp</exec_depend>
+  <exec_depend>rclcpp</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>

@@ -1,6 +1,8 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
+# Launch the files to control turtlesim with a PS joystick
+
 def generate_launch_description():
 
     turtlesim_node = Node(

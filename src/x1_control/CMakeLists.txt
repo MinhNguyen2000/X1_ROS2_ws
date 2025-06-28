@@ -18,7 +18,7 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Install launch files
 install(DIRECTORY
-  launch
+  config launch
   DESTINATION share/${PROJECT_NAME}
 )
 

@@ -6,7 +6,7 @@ def generate_launch_description():
         package='x1_control',
         executable='x1_keyboard.py',
         name='x1_keyboard',
-        output='screen',
+        output='log',
         parameters=[
             {'linear_speed_limit': 1.0},
             {'angular_speed_limit': 5.0}
@@ -15,3 +15,4 @@ def generate_launch_description():
     return LaunchDescription([
         x1_keyboard_node
     ])
+

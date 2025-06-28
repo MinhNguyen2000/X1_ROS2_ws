@@ -62,6 +62,13 @@ class X1Driver(Node):
         self.car.create_receive_threading()
 
     def cmd_vel_callback(self, msg):
+        # Car motion control, subscriber callback function
+        '''
+        vx = msg.linear.x
+        vy = msg.linear.y
+        angular = msg.angular.z
+        Note: Because this model is a Mecanum wheel, it can move on the y-axis. It is not applicable to other models.
+        '''
         if not isinstance(msg, Twist): return
         vx = msg.linear.x
         vy = msg.linear.y
@@ -69,10 +76,28 @@ class X1Driver(Node):
         self.car.set_car_motion(vx, vy, angular)
 
     def RGBLightcallback(self, msg):
+        # Running water light control, server callback function RGBLight control
+        '''
+        effect=[0, 6], 
+        0: Stop light effect, 
+        1: Running water light, 
+        2: Marquee light,
+        3: Breathing light, 
+        4: Gradient light, 
+        5: Starlight, 
+        6: Battery display
+        speed=[1, 10], the smaller the value, the faster the speed changes.
+        '''
         if not isinstance(msg, Int32): return
-        for i in range(3): self.car.set_colorful_effect(msg.data, 6, parm=1)
+        for i in range(3): 
+            self.car.set_colorful_effect(msg.data, 6, parm=1)
 
     def Buzzercallback(self, msg):
+        #Buzzer control, subscriber callback function
+        '''
+        self.car.set_beep(1): Turn on the buzzer
+        self.car.set_beep(0): Turn off the buzzer
+        '''
         if not isinstance(msg, Bool): return
         if msg.data: 
             for i in range(3): self.car.set_beep(1)
@@ -84,6 +109,7 @@ class X1Driver(Node):
             return
 
         # Configure message interface
+        time_stamp = self.get_clock().now()
         imu = Imu()
         twist = Twist()
         battery = Float32()
@@ -91,14 +117,15 @@ class X1Driver(Node):
         mag = MagneticField()
         state = JointState()
 
-        state.header.stamp = self.get_clock().now().to_msg()
+        state.header.stamp = time_stamp.to_msg()
         state.header.frame_id = "joint_states"
         if len(self.Prefix)==0:
             state.name = ["back_right_joint", "back_left_joint","front_left_steer_joint","front_left_wheel_joint",
 							"front_right_steer_joint", "front_right_wheel_joint"]
         else:
-            state.name = [self.Prefix+"back_right_joint",self.Prefix+ "back_left_joint",self.Prefix+"front_left_steer_joint",self.Prefix+"front_left_wheel_joint",
-							self.Prefix+"front_right_steer_joint", self.Prefix+"front_right_wheel_joint"]
+            state.name = [self.Prefix_+"back_right_joint",self.Prefix_+ "back_left_joint",
+                        self.Prefix_+"front_left_steer_joint",self.Prefix_+"front_left_wheel_joint",
+						self.Prefix_+"front_right_steer_joint", self.Prefix_+"front_right_wheel_joint"]
 
         # Obtain sensor data from the car
         edition.data = self.car.get_version()
@@ -110,8 +137,8 @@ class X1Driver(Node):
         vx, vy, angular = self.car.get_motion_data()
 
         # Preparing the message for publishing
-        imu.header.stamp = self.get_clock().now().to_msg()
-        imu.header.frame_id = self.imu_link
+        imu.header.stamp = time_stamp.to_msg()
+        imu.header.frame_id = self.imu_link_
         imu.linear_acceleration.x = ax
         imu.linear_acceleration.y = ay
         imu.linear_acceleration.z = az
@@ -119,8 +146,8 @@ class X1Driver(Node):
         imu.angular_velocity.y = gy
         imu.angular_velocity.z = gz
 
-        mag.header.stamp = self.get_clock().now().to_msg()
-        mag.header.frame_id = self.imu_link
+        mag.header.stamp = time_stamp.to_msg()
+        mag.header.frame_id = self.imu_link_
         mag.magnetic_field.x = mx
         mag.magnetic_field.y = my
         mag.magnetic_field.z = mz

@@ -47,6 +47,7 @@ def generate_launch_description():
         Command(['xacro ', LaunchConfiguration('model')]),
         value_type=str)
 
+    # ========== ROBOT MODEL SIMULATION ==========
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -66,6 +67,7 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('gui'))
     )
 
+    # ========== RVIZ VISUALIZATION ==========
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -74,22 +76,25 @@ def generate_launch_description():
         arguments=['-d', LaunchConfiguration('rvizconfig')],
     )
 
-    imu_filter_config = os.path.join(              # Complete path of the imu parameter file
-        get_package_share_directory('x1_bringup'),
-        'config',
-        'imu_filter_param.yaml'
-    )
-
+    # ========== LOW LEVEL DRIVER ==========
     driver_node = Node(
         package='x1_bringup',
         executable='Mcnamu_driver',
     )
 
+    # ========== ODOMETER DATA PUBLISH ==========
     base_node = Node(
         package='x1_base_node',
         executable='base_node_x1',
         # When using EKF fusion, this tf is published by EKF.
         parameters=[{'pub_odom_tf': LaunchConfiguration('pub_odom_tf')}]
+    )
+
+    # ========== IMU DATA FILTERING AND FUSION ==========
+    imu_filter_config = os.path.join(              # Complete path of the imu parameter file
+        get_package_share_directory('x1_bringup'),
+        'config',
+        'imu_filter_param.yaml'
     )
 
     imu_filter_node = Node(
@@ -98,15 +103,17 @@ def generate_launch_description():
         parameters=[imu_filter_config]
     )
 
+    # ========== EXTENDED KF FILTER ==========
     ekf_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('robot_localization'), 'launch'),
             '/ekf_x1_x3_launch.py'])
     )
 
+    # ========== JOYSTICK HANDLE CONTROL ==========
     x1_joy_node = Node(
         package='x1_control',
-        executable='x1_joy',
+        executable='x1_joy.py',
     )
 
     return LaunchDescription([

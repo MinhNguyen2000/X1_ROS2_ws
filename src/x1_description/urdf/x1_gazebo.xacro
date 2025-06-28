@@ -43,19 +43,19 @@
         <fdir1>1 0 0</fdir1>                <!-- Direction of wheel rotation -->
     </gazebo>
 
-    <!-- Gazebo control related stuff
+    <!-- Gazebo control related stuff -->
     <gazebo>
         <xacro:if value = "$(arg is_ignition)">
             <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
-                <parameters>$(find bumperbot_controller)/config/bumperbot_controllers.yaml</parameters>
+                <parameters>$(find x1_control)/config/x1_controllers.yaml</parameters>
             </plugin>
         </xacro:if>
 
         <xacro:unless value="$(arg is_ignition)">
             <plugin filename = "gz_ros2_control-system" name = "gz_ros2_control::GazeboSimROS2ControlPlugin">
-                <parameters>$(find bumperbot_controller)/config/bumperbot_controllers.yaml</parameters>
+                <parameters>$(find x1_control)/config/x1_controllers.yaml</parameters>
             </plugin>
         </xacro:unless>
-    </gazebo> -->
+    </gazebo> 
 
 </robot>

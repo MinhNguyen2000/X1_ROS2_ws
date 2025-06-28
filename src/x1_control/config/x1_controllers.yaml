@@ -1,0 +1,56 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 1000
+    use_sim_time: true
+
+    # Controller Declaration
+    joint_state_broadcaster: # For publishing the state of the joint sensors
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    x1_controller:
+      type: diff_drive_controller/DiffDriveController
+
+# Parameters of the DiffDriveController
+x1_controller: 
+  ros__parameters:
+    type: diff_drive_controller/DiffDriveController
+    use_stamped_vel: true                       # Use the TwistStamped message for the controller
+    left_wheel_names: ['front_left_joint', 'back_left_joint']      # Name of the joints that actuate the wheels of the robot
+    right_wheel_names: ['front_right_joint', 'back_right_joint']
+    publish_rate: 50.0
+    pose_covariance_diagonal: [0.001, 0.001, 1.0e-3, 1.0e-3, 1.03e-3, 0.01]   # Uncertainty in the motion of the robot
+    twist_covariance_diagonal: [0.001, 0.001, 1.0e-3, 1.0e-3, 1.03e-3, 0.01]
+
+    
+    wheel_radius: 0.070
+    wheel_separation: 0.17
+
+    left_wheel_radius_multiplier: 1.0
+    right_wheel_radius_multiplier: 1.0
+    wheel_separation_multiplier: 1.0
+
+    cmd_vel_timeout: 0.25
+    base_frame_id: base_footprint
+    publish_limited_velocity: true
+    published_wheel_data : true
+    enable_odom_tf: true
+
+    linear:
+      x: 
+        has_velocity_limits: true
+        max_velocity: 1.0
+        min_velocity: -0.5
+        has_acceleration_limits: true
+        max_acceleration: 0.8
+        min_acceleration: -0.4
+        has_jerk_limits: false
+
+    angular:
+      z:
+        has_velocity_limits: true
+        max_velocity: 1.7
+        min_velocity: -1.7
+        has_acceleration_limits: true
+        max_acceleration: 1.5
+        min_acceleration: -1.5
+        has_jerk_limits: false

@@ -1,8 +1,15 @@
 <?xml version = "1.0"?>
 
 <robot name = "ROSMASTER_X1" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!--If ROS2 Humble then is_ignition = true, set to false if higher than ROS2 Humble-->
+    <!-- This is done to adapt the URDF model to the ROS2 version used-->
+    <xacro:arg name="is_ignition" default="true"/> 
+
     <!-- Include Gazebo Parameters -->
     <xacro:include filename="$(find x1_description)/urdf/x1_gazebo.xacro" />
+
+    <!-- Include Gazebo Control Plugins (defined in the ros2 controller package) -->
+  <xacro:include filename="$(find x1_description)/urdf/x1_ros2_control.xacro"/>
 
     <!-- Material definitions -->
     <material name="Green">
