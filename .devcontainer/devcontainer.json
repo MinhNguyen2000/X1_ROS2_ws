@@ -1,0 +1,17 @@
+{
+  "name": "ROS2 Humble Dev Container",
+  "dockerFile": "Dockerfile",
+  "runArgs": [
+    "--privileged",
+    "--network=host",
+    "--device-cgroup-rule=c 13:* rmw"
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
+  "workspaceFolder": "/${localWorkspaceFolderBasename}",
+  "mounts": [
+    "source=/dev,target=/dev,type=bind"
+		// "source=/home/controlslab/X1_ROS2_ws,target=/X1_ROS2_ws,type=bind"
+  ],
+  "postCreateCommand": "source /opt/ros/humble/setup.bash && rosdep update",
+	"remoteUser": "ros"
+}
