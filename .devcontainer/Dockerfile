@@ -30,9 +30,6 @@ RUN apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-plotjuggler-ros && \
     rm -rf /var/lib/apt/lists/*
 
-COPY ./ros_entrypoint.sh /ros_entrypoint.sh
-ENTRYPOINT ["/bin/bash","/ros_entrypoint.sh"]
-
 # Add ubuntu user with same UID and GID as your host system, if it doesn't already exist
 # Since Ubuntu 24.04, a non-root user is created by default with the name vscode and UID=1000
 # Create new regular user (for easy file access between host and container)
@@ -54,6 +51,11 @@ RUN apt-get update && \
 # Switch from root to user
 USER $USERNAME
 
+# Entrypoint script
+COPY ros_entrypoint.sh /ros_entrypoint.sh
+ENTRYPOINT ["/bin/bash","/ros_entrypoint.sh"]
+RUN echo "source /ros_entrypoint.sh" >> /home/$USERNAME/.bashrc
+
 # Add user to video group to allow access to webcam
 RUN sudo usermod --append --groups video $USERNAME
 
@@ -72,3 +74,4 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 ################################
 ## ADD ANY CUSTOM SETUP BELOW ##
 ################################
+USER root
