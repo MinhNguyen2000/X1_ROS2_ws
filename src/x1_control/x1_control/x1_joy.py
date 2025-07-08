@@ -5,7 +5,7 @@ import time
 import getpass
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import Twist, TwistStamped
 from std_msgs.msg import Int32, Bool
 from sensor_msgs.msg import Joy
 from action_msgs.msg import GoalInfo
@@ -13,6 +13,8 @@ from action_msgs.msg import GoalInfo
 class JoyTeleop(Node):
     def __init__(self):
         super().__init__("x1_joy")
+
+        self.use_twist_stamped = False
 
         # Declare parameter with default values
         self.declare_parameter("xspeed_limit", 1.0)
@@ -35,7 +37,10 @@ class JoyTeleop(Node):
 
         # Publisher objects for robot sensing and actuation
         self.pub_goal_ = self.create_publisher(GoalInfo, "move_base/cancel", 10)
-        self.pub_cmdVel_ = self.create_publisher(TwistStamped, "/x1_controller/cmd_vel", 10)
+        if self.use_twist_stamped:
+            self.pub_cmdVel_ = self.create_publisher(TwistStamped, "/x1_controller/cmd_vel", 10)
+        else: 
+            self.pub_cmdVel_ = self.create_publisher(Twist,"/x1_controller/cmd_vel_unstamped", 10)
         self.pub_Buzzer_ = self.create_publisher(Bool, "Buzzer", 10)
         self.pub_JoyState_ = self.create_publisher(Bool, "JoyState", 10)
         self.pub_RGBLight_ = self.create_publisher(Int32, "RGBLight", 10)
@@ -129,6 +134,7 @@ class JoyTeleop(Node):
             angular_speed = -self.angular_speed_limit_
 
         # Twist message on the "/cmd_vel" topic
+        # TODO - adjust this to customize sending Twist or TwistStamped messages
         twist_msg_ = TwistStamped()
         twist_msg_.header.stamp = self.get_clock().now().to_msg()
         twist_msg_.header.frame_id = "base_link"
@@ -213,12 +219,19 @@ class JoyTeleop(Node):
             angular_speed = -self.angular_speed_limit_
 
         # Twist message on the "/cmd_vel" topic
-        twist_msg_ = TwistStamped()
-        twist_msg_.header.stamp = self.get_clock().now().to_msg()
-        twist_msg_.header.frame_id = "odom"
-        twist_msg_.twist.linear.x = xlinear_speed
-        twist_msg_.twist.linear.y = ylinear_speed
-        twist_msg_.twist.angular.z = angular_speed
+        if self.use_twist_stamped:
+            twist_msg_ = TwistStamped()
+            twist_msg_.header.stamp = self.get_clock().now().to_msg()
+            twist_msg_.header.frame_id = "odom"
+            twist_msg_.twist.linear.x = xlinear_speed
+            twist_msg_.twist.linear.y = ylinear_speed
+            twist_msg_.twist.angular.z = angular_speed
+        else:
+            twist_msg_ = Twist()
+            twist_msg_.linear.x = xlinear_speed
+            twist_msg_.linear.y = ylinear_speed
+            twist_msg_.angular.z = angular_speed
+        
         for i in range(3):
             self.pub_cmdVel_.publish(twist_msg_)
 
@@ -235,7 +248,7 @@ class JoyTeleop(Node):
             for i in range(3):
                 self.pub_JoyState_.publish(Bool(data=self.Joy_active_))
                 self.pub_goal_.publish(GoalInfo())
-                self.pub_cmdVel_.publish(TwistStamped())
+                self.pub_cmdVel_.publish(TwistStamped() if self.use_twist_stamped else Twist())
             self.cancel_time = now_time
 
     def cancel(self):

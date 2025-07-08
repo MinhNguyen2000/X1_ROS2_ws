@@ -4,10 +4,11 @@
   "runArgs": [
     "--privileged",
     "--network=host",
-    "--device-cgroup-rule=c 13:* rmw"
+    "--device-cgroup-rule=c 13:* rmw",
+    "--env=DISPLAY"
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
-  "workspaceFolder": "/${localWorkspaceFolderBasename}",
+  "workspaceFolder": "/${localWorkspaceFolderBasename}",  
   "mounts": [
     "source=/dev,target=/dev,type=bind"
 		// "source=/home/controlslab/X1_ROS2_ws,target=/X1_ROS2_ws,type=bind"

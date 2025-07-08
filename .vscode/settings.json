@@ -1,0 +1,18 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/X1_ROS2_ws/install/x1_msgs/local/lib/python3.10/dist-packages",
+        "/X1_ROS2_ws/install/x1_control/local/lib/python3.10/dist-packages",
+        "/X1_ROS2_ws/build/x1_bringup",
+        "/X1_ROS2_ws/install/x1_bringup/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/X1_ROS2_ws/install/x1_msgs/local/lib/python3.10/dist-packages",
+        "/X1_ROS2_ws/install/x1_control/local/lib/python3.10/dist-packages",
+        "/X1_ROS2_ws/build/x1_bringup",
+        "/X1_ROS2_ws/install/x1_bringup/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}

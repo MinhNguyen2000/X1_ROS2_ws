@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-demo-nodes-cpp \
     ros-${ROS_DISTRO}-demo-nodes-py \
+    ros-${ROS_DISTRO}-ros2-control \
     ros-${ROS_DISTRO}-ros2-controllers \
     ros-${ROS_DISTRO}-xacro \
     ros-${ROS_DISTRO}-ros-gz* \
@@ -73,5 +74,5 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 
 ################################
 ## ADD ANY CUSTOM SETUP BELOW ##
-################################
-USER root
+################################S
+USER root 

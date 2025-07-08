@@ -46,6 +46,9 @@ def generate_launch_description():
         parameters=[
             {'linear_speed_limit': 1.0},
             {'angular_speed_limit': 5.0}
+        ],
+        remappings=[
+            ('/x1_controller/cmd_vel', '/x1_controller/cmd_vel_unstamped')
         ]
         # parameters = [os.path.join(get_package_share_directory("x1_control"),"config","joy_teleop.yaml")]
     )

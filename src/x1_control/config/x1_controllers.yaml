@@ -14,7 +14,7 @@ controller_manager:
 x1_controller: 
   ros__parameters:
     type: diff_drive_controller/DiffDriveController
-    use_stamped_vel: true                       # Use the TwistStamped message for the controller
+    use_stamped_vel: false                       # Use the TwistStamped message for the controller
     left_wheel_names: ['front_left_joint', 'back_left_joint']      # Name of the joints that actuate the wheels of the robot
     right_wheel_names: ['front_right_joint', 'back_right_joint']
     publish_rate: 50.0
