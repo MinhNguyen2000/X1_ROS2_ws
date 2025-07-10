@@ -2,7 +2,7 @@
 <!-- This file configures the control plugins in the bumperbot_gazebo.xacro file -->
 <robot name = "ROSMASTER_X1" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <!-- Hardware interface for controller manager-->
+    <!-- Hardware interface for controller manager -->
     <ros2_control name = "RobotSystem" type = "system">
         <!-- If ROS2 Humble then use this plugin-->
         <xacro:if value = "$(arg is_ignition)">
@@ -14,7 +14,7 @@
         <!-- If higher than ROS2 Humble (Iron, Jazzy,...), then use this plugin-->
         <xacro:unless value = "$(arg is_ignition)">
             <hardware>
-                <plugin>gz_ros2_control/GazeboSystem</plugin>
+                <plugin>gz_ros2_control/GazeboSimSystem</plugin>
             </hardware>
         </xacro:unless>
     

@@ -7,14 +7,25 @@ controller_manager:
     joint_state_broadcaster: # For publishing the state of the joint sensors
       type: joint_state_broadcaster/JointStateBroadcaster
 
+    simple_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
     x1_controller:
       type: diff_drive_controller/DiffDriveController
+
+simple_velocity_controller:
+  ros__parameters:
+    joints:
+     - front_left_joint
+     - front_right_joint
+     - back_left_joint
+     - back_right_joint
 
 # Parameters of the DiffDriveController
 x1_controller: 
   ros__parameters:
-    type: diff_drive_controller/DiffDriveController
-    use_stamped_vel: false                       # Use the TwistStamped message for the controller
+    # type: diff_drive_controller/DiffDriveController
+    use_stamped_vel: true                       # Use the TwistStamped message for the controller
     left_wheel_names: ['front_left_joint', 'back_left_joint']      # Name of the joints that actuate the wheels of the robot
     right_wheel_names: ['front_right_joint', 'back_right_joint']
     publish_rate: 50.0
@@ -29,7 +40,7 @@ x1_controller:
     right_wheel_radius_multiplier: 1.0
     wheel_separation_multiplier: 1.0
 
-    cmd_vel_timeout: 0.25
+    cmd_vel_timeout: 1.0
     base_frame_id: base_footprint
     publish_limited_velocity: true
     published_wheel_data : true

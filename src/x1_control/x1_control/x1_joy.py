@@ -14,8 +14,6 @@ class JoyTeleop(Node):
     def __init__(self):
         super().__init__("x1_joy")
 
-        self.use_twist_stamped = False
-
         # Declare parameter with default values
         self.declare_parameter("xspeed_limit", 1.0)
         self.declare_parameter("yspeed_limit", 1.0)
@@ -37,10 +35,7 @@ class JoyTeleop(Node):
 
         # Publisher objects for robot sensing and actuation
         self.pub_goal_ = self.create_publisher(GoalInfo, "move_base/cancel", 10)
-        if self.use_twist_stamped:
-            self.pub_cmdVel_ = self.create_publisher(TwistStamped, "/x1_controller/cmd_vel", 10)
-        else: 
-            self.pub_cmdVel_ = self.create_publisher(Twist,"/x1_controller/cmd_vel_unstamped", 10)
+        self.pub_cmdVel_ = self.create_publisher(TwistStamped, "/x1_controller/cmd_vel", 10)
         self.pub_Buzzer_ = self.create_publisher(Bool, "Buzzer", 10)
         self.pub_JoyState_ = self.create_publisher(Bool, "JoyState", 10)
         self.pub_RGBLight_ = self.create_publisher(Int32, "RGBLight", 10)
@@ -202,35 +197,29 @@ class JoyTeleop(Node):
 
         # Speed calculation and limitation
         xlinear_speed = self.filter_data(joy_data.axes[1]) * self.xspeed_limit_ * self.linear_Gear_
-        ylinear_speed = self.filter_data(joy_data.axes[0]) * self.yspeed_limit_ * self.linear_Gear_
+        # ylinear_speed = self.filter_data(joy_data.axes[0]) * self.yspeed_limit_ * self.linear_Gear_
         angular_speed = self.filter_data(joy_data.axes[3]) * self.angular_speed_limit_ * self.angular_Gear_
 
         if xlinear_speed > self.xspeed_limit_: 
             xlinear_speed = self.xspeed_limit_
         elif xlinear_speed < -self.xspeed_limit_: 
             xlinear_speed = -self.xspeed_limit_
-        if ylinear_speed > self.yspeed_limit_: 
-            ylinear_speed = self.yspeed_limit_
-        elif ylinear_speed < -self.yspeed_limit_: 
-            ylinear_speed = -self.yspeed_limit_
+        # if ylinear_speed > self.yspeed_limit_: 
+        #     ylinear_speed = self.yspeed_limit_
+        # elif ylinear_speed < -self.yspeed_limit_: 
+        #     ylinear_speed = -self.yspeed_limit_
         if angular_speed > self.angular_speed_limit_: 
             angular_speed = self.angular_speed_limit_
         elif angular_speed < -self.angular_speed_limit_: 
             angular_speed = -self.angular_speed_limit_
 
         # Twist message on the "/cmd_vel" topic
-        if self.use_twist_stamped:
-            twist_msg_ = TwistStamped()
-            twist_msg_.header.stamp = self.get_clock().now().to_msg()
-            twist_msg_.header.frame_id = "odom"
-            twist_msg_.twist.linear.x = xlinear_speed
-            twist_msg_.twist.linear.y = ylinear_speed
-            twist_msg_.twist.angular.z = angular_speed
-        else:
-            twist_msg_ = Twist()
-            twist_msg_.linear.x = xlinear_speed
-            twist_msg_.linear.y = ylinear_speed
-            twist_msg_.angular.z = angular_speed
+        twist_msg_ = TwistStamped()
+        twist_msg_.header.stamp = self.get_clock().now().to_msg()
+        twist_msg_.header.frame_id = "base_footprint"
+        twist_msg_.twist.linear.x = xlinear_speed
+        # twist_msg_.twist.linear.y = ylinear_speed
+        twist_msg_.twist.angular.z = angular_speed
         
         for i in range(3):
             self.pub_cmdVel_.publish(twist_msg_)

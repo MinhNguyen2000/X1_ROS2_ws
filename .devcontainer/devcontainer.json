@@ -13,6 +13,6 @@
     "source=/dev,target=/dev,type=bind"
 		// "source=/home/controlslab/X1_ROS2_ws,target=/X1_ROS2_ws,type=bind"
   ],
-  "postCreateCommand": "source /opt/ros/humble/setup.bash && rosdep update",
+  // "postCreateCommand": "source /opt/ros/humble/setup.bash && rosdep update",
 	"remoteUser": "ros"
 }

@@ -56,7 +56,7 @@ def generate_launch_description():
 
     joint_state_publisher_gui = Node(
         package="joint_state_publisher_gui",
-        executable="joint_state_publisher_gui",
+        executable="joint_state_publisher_gui", 
         condition= IfCondition(use_gui)
     )
 
@@ -81,7 +81,7 @@ def generate_launch_description():
         # robot_type_arg,
         model_arg,
         robot_state_publisher,
-        joint_state_publisher,
-        joint_state_publisher_gui,
+        # joint_state_publisher,
+        # joint_state_publisher_gui,
         rviz_node
     ])

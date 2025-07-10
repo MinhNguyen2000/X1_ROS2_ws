@@ -17,9 +17,7 @@ def generate_launch_description():
     is_ignition = "True" if ros_distro == "humble" else "False"
 
     # Paths to URDF and Gazebo launch files
-    gazebo_launch_file_dir = os.path.join(
-        get_package_share_directory('ros_gz_sim'), 'launch'
-    )
+    gazebo_launch_file_dir = os.path.join(get_package_share_directory('ros_gz_sim'), 'launch')
     # yahboomcar_urdf = os.path.join(
     #     get_package_share_directory('yahboomcar_description'), 'urdf', 'yahboomcar.urdf'
     # )
@@ -63,12 +61,12 @@ def generate_launch_description():
         parameters = [{"robot_description": robot_description}],
     )
 
-    # Static transform publisher (for base_link to base_footprint)
+    # Static transform publisher (from base_footprint to base_link)
     static_tf = Node(
+        name='tf_footprint_base',
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='tf_footprint_base',
-        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'base_footprint']
+        arguments=['0', '0', '0', '0', '0', '0', 'base_footprint', 'base_link']
     )
 
     # Spawn X1 model in Gazebo
@@ -97,7 +95,7 @@ def generate_launch_description():
         robot_state_publisher_node,
         gazebo_resource_path,
         gazebo,
-        static_tf,
+        # static_tf,
         gz_spawn_entity
         # fake_joint_calibration
     ])
