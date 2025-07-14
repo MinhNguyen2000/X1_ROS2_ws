@@ -135,16 +135,8 @@
                       xyz="-0.08 0.0845 -0.0395" rpy="${pi/2} 0 0" axis="0 0 -1"/>
 
     <!-- Sensors -->
-    <xacro:common_link name="laser_link" material="White" path="sensor" collision_shape="cylinder" collision_size="0.06 0.06" collision_xyz='-0.005 0 -0.02'>
-        <inertial>
-            <origin xyz="-0.0176558922685589 0.000671805271544437 0.0219302095894866" rpy="0 0 0"/>
-            <mass value="0.0483909504209895"/>
-            <inertia ixx="1.58456966399128E-05" ixy="-4.23913983850005E-07" ixz="-2.09597897904374E-07"
-                     iyy="3.89262522903605E-05" iyz="3.24809725932687E-07" izz="4.86230801106223E-05"/>
-        </inertial>
-    </xacro:common_link>
-    <xacro:fixed_joint name="laser_joint" parent="base_link" child="laser_link" xyz="0.0435 5.25826986680105E-05 0.11" rpy="0 0 0"/>
-    
+    <xacro:include filename="lidar.xacro"/>
+
     <xacro:common_link name="camera_link" material="White" path="sensor" collision_shape="box" collision_size="0.06 0.17 0.05">
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
