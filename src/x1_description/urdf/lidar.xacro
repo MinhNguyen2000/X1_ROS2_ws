@@ -10,4 +10,31 @@
         </inertial>
     </xacro:common_link>
     <xacro:fixed_joint name="laser_joint" parent="base_link" child="laser_link" xyz="0.0435 5.25826986680105E-05 0.11" rpy="0 0 0"/>
+
+    <gazebo reference="laser_link">
+        <!-- <sensor name="laser" type="ray"> -->
+        <sensor name="laser" type="gpu_lidar">
+            <pose> 0 0 0 0 0 0 </pose>
+            <topic>scan</topic>
+            <gz_frame_id>laser_link</gz_frame_id>
+            <alwaysOn>1</alwaysOn>
+            <visualize>true</visualize>
+            <update_rate>10</update_rate>
+            <lidar>
+                <scan>
+                    <horizontal>
+                        <samples>360</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-3.14</min_angle>
+                        <max_angle>3.14</max_angle>
+                    </horizontal>
+                </scan>
+                <range>
+                    <min>0.3</min>
+                    <max>12</max>
+                    <resolution>0.01</resolution>
+                </range>
+            </lidar>
+        </sensor>
+    </gazebo>
 </robot>

@@ -17,10 +17,24 @@ def generate_launch_description():
     is_ignition = "True" if ros_distro == "humble" else "False"
 
     # Paths to URDF and Gazebo launch files
-    gazebo_launch_file_dir = os.path.join(get_package_share_directory('ros_gz_sim'), 'launch')
+    gazebo_launch_file_dir = os.path.join(get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')
     # yahboomcar_urdf = os.path.join(
     #     get_package_share_directory('yahboomcar_description'), 'urdf', 'yahboomcar.urdf'
     # )
+
+    default_world = os.path.join(
+        get_package_share_directory('x1_description'),
+        'worlds',
+        'empty.world')
+    
+    world_arg = DeclareLaunchArgument(
+        'world',
+        default_value=default_world,
+        description="World to load"
+    )
+
+    world = LaunchConfiguration('world')
+
 
     x1_description_dir = get_package_share_directory("x1_description")          # Path to package
     x1_urdf_dir = os.path.join(x1_description_dir, 'urdf', 'x1.urdf.xacro')     # Path to URDF file
@@ -49,8 +63,10 @@ def generate_launch_description():
     # Include Gazebo empty world launch file
     gazebo = IncludeLaunchDescription(
         # PythonLaunchDescriptionSource([gazebo_launch_file_dir, '/empty_world.launch.py']),
-        PythonLaunchDescriptionSource([gazebo_launch_file_dir, '/gz_sim.launch.py']),
-        launch_arguments = [("gz_args",["-v 4"," -r"])]
+        PythonLaunchDescriptionSource([gazebo_launch_file_dir]),
+        launch_arguments = 
+        {'gz_args': ['-r -v4 ', world]}.items() 
+        # [("gz_args",["-v 4"," -r"])]
     )
 
     # ========== NODE DEFINITION ========== 
@@ -91,11 +107,12 @@ def generate_launch_description():
 
     # Launch description to run everything
     return LaunchDescription([
+        world_arg,
         model_arg,
         robot_state_publisher_node,
         gazebo_resource_path,
         gazebo,
-        # static_tf,
+        static_tf,
         gz_spawn_entity
         # fake_joint_calibration
     ])
