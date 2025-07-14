@@ -6,8 +6,8 @@
         <gazebo reference="${name}">
             <!-- <mu1>0.1</mu1>
             <mu2>0.1</mu2> -->
-            <mu1>0.1</mu1>        <!-- High friction coeff to avoid slipage -->
-            <mu2>0.1</mu2>
+            <mu1>0.15</mu1>        <!-- High friction coeff to avoid slipage -->
+            <mu2>0.0</mu2>
             <kp>1.0</kp>
             <kd>1.0</kd>
             <minDepth>0.001</minDepth>
