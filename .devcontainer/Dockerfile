@@ -28,7 +28,8 @@ RUN apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-gazebo-ros-pkgs \
     ros-${ROS_DISTRO}-gazebo-ros2-control \
     ros-${ROS_DISTRO}-plotjuggler \
-    ros-${ROS_DISTRO}-plotjuggler-ros && \
+    ros-${ROS_DISTRO}-plotjuggler-ros \
+    ros-${ROS_DISTRO}-rqt-tf-tree  && \
     rm -rf /var/lib/apt/lists/*
 
 # Add ubuntu user with same UID and GID as your host system, if it doesn't already exist

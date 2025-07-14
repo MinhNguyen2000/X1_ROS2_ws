@@ -14,5 +14,25 @@
 		// "source=/home/controlslab/X1_ROS2_ws,target=/X1_ROS2_ws,type=bind"
   ],
   // "postCreateCommand": "source /opt/ros/humble/setup.bash && rosdep update",
-	"remoteUser": "ros"
+  "remoteUser": "ros",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "twxs.cmake",
+        "ms-vscode.cmake-tools",
+        "formulahendry.code-runner",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "redhat.vscode-xml",
+        "fabiospampinato.vscode-todo-plus",
+        "Ranch-Hand-Robotics.rde-ros-2",
+        "Ranch-Hand-Robotics.urdf-editor",
+        "Ranch-Hand-Robotics.rde-pack",
+        "ms-iot.vscode-ros"
+      ]
+    }
+  }
 }
