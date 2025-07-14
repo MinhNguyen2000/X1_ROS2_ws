@@ -237,7 +237,7 @@ class JoyTeleop(Node):
             for i in range(3):
                 self.pub_JoyState_.publish(Bool(data=self.Joy_active_))
                 self.pub_goal_.publish(GoalInfo())
-                self.pub_cmdVel_.publish(TwistStamped() if self.use_twist_stamped else Twist())
+                self.pub_cmdVel_.publish(TwistStamped())
             self.cancel_time = now_time
 
     def cancel(self):

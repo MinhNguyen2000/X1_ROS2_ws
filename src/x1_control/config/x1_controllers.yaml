@@ -49,11 +49,11 @@ x1_controller:
     linear:
       x: 
         has_velocity_limits: true
-        max_velocity: 1.0
+        max_velocity: 2.0
         min_velocity: -0.5
         has_acceleration_limits: true
         max_acceleration: 0.8
-        min_acceleration: -0.4
+        min_acceleration: -0.8
         has_jerk_limits: false
 
     angular:
