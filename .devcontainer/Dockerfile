@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-ros2-controllers \
     ros-${ROS_DISTRO}-xacro \
     ros-${ROS_DISTRO}-ros-gz* \
-    ros-${ROS_DISTRO}-*-ros2-control \
+    ros-${ROS_DISTRO}-gz-ros2-control \
     ros-${ROS_DISTRO}-joint-state-publisher-gui \
     ros-${ROS_DISTRO}-turtlesim \
     ros-${ROS_DISTRO}-robot-localization \
@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-tf-transformations \
     ros-${ROS_DISTRO}-gazebo-ros \
     ros-${ROS_DISTRO}-gazebo-ros-pkgs \
-    ros-${ROS_DISTRO}-gazebo-ros2-control \
+    # ros-${ROS_DISTRO}-gazebo-ros2-control \
     ros-${ROS_DISTRO}-plotjuggler \
     ros-${ROS_DISTRO}-plotjuggler-ros \
     ros-${ROS_DISTRO}-rqt-tf-tree  && \
