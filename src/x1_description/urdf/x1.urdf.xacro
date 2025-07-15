@@ -136,13 +136,5 @@
 
     <!-- Sensors -->
     <xacro:include filename="lidar.xacro"/>
-
-    <xacro:common_link name="camera_link" material="White" path="sensor" collision_shape="box" collision_size="0.06 0.17 0.05">
-        <inertial>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <mass value="0"/>
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-        </inertial>
-    </xacro:common_link>
-    <xacro:fixed_joint name="camera_joint" parent="base_link" child="camera_link" xyz="0.057105 1.7948E-05 0.03755" rpy="0 0 0"/>
+    <xacro:include filename="camera.xacro"/>
 </robot>
