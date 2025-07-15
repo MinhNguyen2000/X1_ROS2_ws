@@ -70,7 +70,6 @@ def generate_launch_description():
 
     # Include Gazebo empty world launch file
     gazebo = IncludeLaunchDescription(
-        # PythonLaunchDescriptionSource([gazebo_launch_file_dir, '/empty_world.launch.py']),
         PythonLaunchDescriptionSource([gazebo_launch_file_dir]),
         launch_arguments = 
         {'gz_args': ['-r -v4 ', world]}.items() 
@@ -152,7 +151,12 @@ def generate_launch_description():
         ]
     )
 
-    bridge_params = os.path.join(get_package_share_directory('x1_description'), 'config', 'gz_bridge.yaml')
+    bridge_params = os.path.join(
+        get_package_share_directory('x1_description'),
+        'config',
+        'gz_bridge.yaml'
+    )
+    
     ros_gz_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
