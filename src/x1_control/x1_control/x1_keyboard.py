@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import TwistStamped
 import sys, select, termios, tty
 
 msg = """
@@ -47,12 +47,12 @@ class KeyboardControlNode(Node):
         super().__init__('keyboard_control')
         
         # Declare parameters with default values
-        self.linear_limit = self.declare_parameter('linear_speed_limit', 1.0).get_parameter_value().double_value
+        self.linear_limit = self.declare_parameter('linear_speed_limit', 2.0).get_parameter_value().double_value
         self.angular_limit = self.declare_parameter('angular_speed_limit', 5.0).get_parameter_value().double_value
         self.settings_ = termios.tcgetattr(sys.stdin)
 
         # Publisher
-        self.vel_pub_ = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.vel_pub_ = self.create_publisher(TwistStamped, '/x1_controller/cmd_vel', 10)
         
         # Node variables
         self.xspeed_switch_ = True
@@ -136,20 +136,22 @@ def main():
                     kb_ctrl_node.th_ = 0
                 if key == "\x03": break
 
-            twist_msg = Twist()
+            twist_msg = TwistStamped()
+            twist_msg.header.stamp = kb_ctrl_node.get_clock().now().to_msg()
+            twist_msg.header.frame_id = "base_link"
             if kb_ctrl_node.xspeed_switch_:
-                twist_msg.linear.x = kb_ctrl_node.speed_ * kb_ctrl_node.x_
+                twist_msg.twist.linear.x = kb_ctrl_node.speed_ * kb_ctrl_node.x_
             else:
-                twist_msg.linear.y = kb_ctrl_node.speed_ * kb_ctrl_node.x_
-            twist_msg.angular.z = kb_ctrl_node.turn_ * kb_ctrl_node.th_
+                twist_msg.twist.linear.y = kb_ctrl_node.speed_ * kb_ctrl_node.x_
+            twist_msg.twist.angular.z = kb_ctrl_node.turn_ * kb_ctrl_node.th_
 
             if not kb_ctrl_node.stop_: kb_ctrl_node.vel_pub_.publish(twist_msg)
-            if kb_ctrl_node.stop_: kb_ctrl_node.vel_pub_.publish(Twist())
+            if kb_ctrl_node.stop_: kb_ctrl_node.vel_pub_.publish(TwistStamped())
     except Exception as e:
         print(e)
     finally: # Stop the robot by publishing an empty Twist() message and reset the terminal settings
         print('Stopping the robot.')
-        kb_ctrl_node.vel_pub_.publish(Twist())  # Stop the robot by sending zero velocity
+        kb_ctrl_node.vel_pub_.publish(TwistStamped())  # Stop the robot by sending zero velocity
         print('Restoring terminal settings.')
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, kb_ctrl_node.settings_)  # Restore terminal settings
         print('Destroying node.')
