@@ -151,6 +151,7 @@ def generate_launch_description():
         ]
     )
 
+    # ROS-Gazebo bridge parameters and node
     bridge_params = os.path.join(
         get_package_share_directory('x1_description'),
         'config',
@@ -167,6 +168,12 @@ def generate_launch_description():
         ]
     )
 
+    ros_gz_image_bridge = Node(
+        package="ros_gz_image",
+        executable="image_bridge",
+        arguments=["/camera/image_raw"]
+    )
+
 
     # Launch description to run everything
     return LaunchDescription([
@@ -178,9 +185,9 @@ def generate_launch_description():
         gazebo,
         static_tf,
         gz_spawn_entity,
-        joy_node,
-        x1_joy_node,
+        joy_node, x1_joy_node,
         joint_state_broadcaster_spawner,
         x1_diffdrive_controller_spawner,
-        ros_gz_bridge
+        ros_gz_bridge,
+        ros_gz_image_bridge
     ])
