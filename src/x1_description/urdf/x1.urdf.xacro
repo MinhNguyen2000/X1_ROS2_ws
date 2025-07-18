@@ -54,7 +54,7 @@
             <child link="${child}"/>
             <origin xyz="${xyz}" rpy="${rpy}"/>
             <axis xyz="${axis}"/>
-            <limit lower="${-pi}" upper="${pi}" effort="100" velocity="1"/>
+            <limit lower="${-pi}" upper="${pi}" effort="100" velocity="2.5"/>
             <dynamics friction="1E-04"/>
         </joint>
     </xacro:macro>

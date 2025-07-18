@@ -15,8 +15,8 @@ class JoyTeleop(Node):
         super().__init__("x1_joy")
 
         # Declare parameter with default values
-        self.declare_parameter("xspeed_limit", 1.0)
-        self.declare_parameter("yspeed_limit", 1.0)
+        self.declare_parameter("xspeed_limit", 5.0)
+        self.declare_parameter("yspeed_limit", 5.0)
         self.declare_parameter("angular_speed_limit", 5.0)
 
         # Node variables
