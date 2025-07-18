@@ -30,6 +30,9 @@ RUN apt-get update && apt-get install -y \
     # ros-${ROS_DISTRO}-gazebo-ros2-control \
     ros-${ROS_DISTRO}-plotjuggler \
     ros-${ROS_DISTRO}-plotjuggler-ros \
+    # Nav2 stack
+    ros-${ROS_DISTRO}-navigation2 \
+    ros-${ROS_DISTRO}-nav2-bringup \
     ros-${ROS_DISTRO}-rqt-tf-tree  && \
     rm -rf /var/lib/apt/lists/*
 
