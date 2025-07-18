@@ -26,7 +26,7 @@ def generate_launch_description():
     default_world = os.path.join(
         get_package_share_directory('x1_description'),
         'worlds',
-        'empty.world')
+        'world.sdf')
     
     world_arg = DeclareLaunchArgument(
         'world',
@@ -71,8 +71,7 @@ def generate_launch_description():
     # Include Gazebo empty world launch file
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([gazebo_launch_file_dir]),
-        launch_arguments = 
-        {'gz_args': ['-r -v4 ', world]}.items() 
+        launch_arguments = {'gz_args': ['-r -v4 ', world]}.items() 
     )
 
     # ========== NODE DEFINITION ========== 
@@ -120,10 +119,10 @@ def generate_launch_description():
         executable='x1_joy.py',
         name='x1_joy',
         output='screen',
-        parameters=[
-            {'linear_speed_limit': 1.0},
-            {'angular_speed_limit': 5.0}
-        ],
+        # parameters=[
+        #     {'linear_speed_limit': 5.0},
+        #     {'angular_speed_limit': 5.0}
+        # ],
         condition=IfCondition(use_joy)
     )
 
