@@ -17,7 +17,8 @@ class JoyTeleop(Node):
         # Declare parameter with default values
         self.declare_parameter("xspeed_limit", 5.0)
         self.declare_parameter("yspeed_limit", 5.0)
-        self.declare_parameter("angular_speed_limit", 5.0)
+        self.declare_parameter("angular_speed_limit", 2.5)
+        self.use_twiststamped = False
 
         # Node variables
         self.Joy_active_ = False
@@ -35,7 +36,10 @@ class JoyTeleop(Node):
 
         # Publisher objects for robot sensing and actuation
         self.pub_goal_ = self.create_publisher(GoalInfo, "move_base/cancel", 10)
-        self.pub_cmdVel_ = self.create_publisher(TwistStamped, "/x1_controller/cmd_vel", 10)
+        if self.use_twiststamped:
+            self.pub_cmdVel_ = self.create_publisher(TwistStamped, "cmd_vel_joy", 10)
+        else:
+            self.pub_cmdVel_ = self.create_publisher(Twist, "cmd_vel_joy", 10)
         self.pub_Buzzer_ = self.create_publisher(Bool, "Buzzer", 10)
         self.pub_JoyState_ = self.create_publisher(Bool, "JoyState", 10)
         self.pub_RGBLight_ = self.create_publisher(Int32, "RGBLight", 10)
@@ -130,12 +134,18 @@ class JoyTeleop(Node):
 
         # Twist message on the "/cmd_vel" topic
         # TODO - adjust this to customize sending Twist or TwistStamped messages
-        twist_msg_ = TwistStamped()
-        twist_msg_.header.stamp = self.get_clock().now().to_msg()
-        twist_msg_.header.frame_id = "base_link"
-        twist_msg_.twist.linear.x = xlinear_speed
-        twist_msg_.twist.linear.y = ylinear_speed
-        twist_msg_.twist.angular.z = angular_speed
+        if self.use_twiststamped:
+            twist_msg_ = TwistStamped()
+            twist_msg_.header.stamp = self.get_clock().now().to_msg()
+            twist_msg_.header.frame_id = "base_link"
+            twist_msg_.twist.linear.x = xlinear_speed
+            twist_msg_.twist.linear.y = ylinear_speed
+            twist_msg_.twist.angular.z = angular_speed
+        else:
+            twist_msg_ = Twist()
+            twist_msg_.linear.x = xlinear_speed
+            twist_msg_.linear.y = ylinear_speed
+            twist_msg_.angular.z = angular_speed
         for i in range(3):
             self.pub_cmdVel_.publish(twist_msg_)
 
@@ -214,12 +224,16 @@ class JoyTeleop(Node):
             angular_speed = -self.angular_speed_limit_
 
         # Twist message on the "/cmd_vel" topic
-        twist_msg_ = TwistStamped()
-        twist_msg_.header.stamp = self.get_clock().now().to_msg()
-        twist_msg_.header.frame_id = "base_footprint"
-        twist_msg_.twist.linear.x = xlinear_speed
-        # twist_msg_.twist.linear.y = ylinear_speed
-        twist_msg_.twist.angular.z = angular_speed
+        if self.use_twiststamped:
+            twist_msg_ = TwistStamped()
+            twist_msg_.header.stamp = self.get_clock().now().to_msg()
+            twist_msg_.header.frame_id = "base_link"
+            twist_msg_.twist.linear.x = xlinear_speed
+            twist_msg_.twist.angular.z = angular_speed
+        else:
+            twist_msg_ = Twist()
+            twist_msg_.linear.x = xlinear_speed
+            twist_msg_.angular.z = angular_speed
         
         for i in range(3):
             self.pub_cmdVel_.publish(twist_msg_)
