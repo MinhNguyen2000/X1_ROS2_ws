@@ -36,8 +36,10 @@ def generate_launch_description():
 
     world = LaunchConfiguration('world')
 
+    nav2_launch_file_dir = os.path.join(get_package_share_directory('nav2_bringup'),'launch','navigation_launch.py')
 
     x1_description_dir = get_package_share_directory("x1_description")          # Path to package
+    x1_control_dir = get_package_share_directory("x1_control")
     x1_urdf_dir = os.path.join(x1_description_dir, 'urdf', 'x1.urdf.xacro')     # Path to URDF file
 
     # ========== ARGUMENT DEFINITION ==========
@@ -173,6 +175,42 @@ def generate_launch_description():
         arguments=["/camera/image_raw"]
     )
 
+    # SLAM toolbox
+    slam_toolbox = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(x1_description_dir,'launch','online_async_launch.py'))
+    )
+
+    # Nav2 stack
+    nav2 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(nav2_launch_file_dir),
+        launch_arguments={'use_sim_time': 'true'}.items()
+    )
+
+    twist_mux = Node(
+        package="twist_mux",
+        executable="twist_mux",
+        name='twist_mux',
+        parameters=[os.path.join(x1_control_dir,
+                                 'config',
+                                 'twist_mux.yaml')],
+        remappings=[
+            ('/cmd_vel_out', '/x1_controller/cmd_vel_unstamped')
+        ]
+    )
+
+    twist_stamper = Node(
+        package = "twist_stamper",
+        executable='twist_stamper',
+        name='twist_stamper',
+        remappings=[
+            ('/cmd_vel_in', '/x1_controller/cmd_vel_unstamped'),
+            ('/cmd_vel_out', '/x1_controller/cmd_vel')
+        ],
+        parameters=[{
+            'frame_id': 'base_link'  # Adjust based on your robot's frame
+        }]
+    )
+
 
     # Launch description to run everything
     return LaunchDescription([
@@ -188,5 +226,9 @@ def generate_launch_description():
         joint_state_broadcaster_spawner,
         x1_diffdrive_controller_spawner,
         ros_gz_bridge,
-        ros_gz_image_bridge
+        ros_gz_image_bridge,
+        slam_toolbox,
+        nav2,
+        twist_mux,
+        twist_stamper
     ])
