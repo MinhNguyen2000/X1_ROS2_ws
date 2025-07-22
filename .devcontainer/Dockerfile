@@ -30,6 +30,9 @@ RUN apt-get update && apt-get install -y \
     # ros-${ROS_DISTRO}-gazebo-ros2-control \
     ros-${ROS_DISTRO}-plotjuggler \
     ros-${ROS_DISTRO}-plotjuggler-ros \
+    # Handle Twist/TwistStamped messages
+    ros-${ROS_DISTRO}-twist-mux \
+    ros-${ROS_DISTRO}-twist-stamper \
     # Nav2 stack
     ros-${ROS_DISTRO}-navigation2 \
     ros-${ROS_DISTRO}-nav2-bringup \
