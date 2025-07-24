@@ -26,8 +26,6 @@ install(DIRECTORY
 install(PROGRAMS
   ${PROJECT_NAME}/x1_keyboard.py
   ${PROJECT_NAME}/x1_joy.py
-  ${PROJECT_NAME}/twist_joy.py
-  ${PROJECT_NAME}/turtlebot_joy.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
