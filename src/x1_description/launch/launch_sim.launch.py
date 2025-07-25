@@ -220,7 +220,7 @@ def generate_launch_description():
         robot_state_publisher_node,
         gazebo_resource_path,
         gazebo,
-        static_tf,
+        # static_tf,
         gz_spawn_entity,
         joy_node, x1_joy_node,
         joint_state_broadcaster_spawner,
