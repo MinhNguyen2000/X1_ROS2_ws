@@ -39,6 +39,15 @@ RUN apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-rqt-tf-tree  && \
     rm -rf /var/lib/apt/lists/*
 
+# Build the ydlidar SDK
+WORKDIR /opt
+RUN git clone https://github.com/YDLIDAR/YDLidar-SDK.git \
+  && cd /opt/YDLidar-SDK \
+  && mkdir build && cd build \
+  && cmake .. \
+  && make -j4 \
+  && sudo make install
+
 # Add ubuntu user with same UID and GID as your host system, if it doesn't already exist
 # Since Ubuntu 24.04, a non-root user is created by default with the name vscode and UID=1000
 # Create new regular user (for easy file access between host and container)
@@ -68,11 +77,11 @@ RUN echo "source /ros_entrypoint.sh" >> /home/$USERNAME/.bashrc
 # Add user to video group to allow access to webcam
 RUN sudo usermod --append --groups video $USERNAME
 
-# Update all packages
-RUN sudo apt update && sudo apt upgrade -y
+# Add user to video group to allow access to serial
+RUN sudo usermod --append --groups dialout $USERNAME
 
-# Install Git
-RUN sudo apt install -y git
+# Update all packages
+RUN sudo apt update  
 
 # Rosdep update
 RUN rosdep update
@@ -81,7 +90,5 @@ RUN rosdep update
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 RUN echo "source /X1_ROS2_ws/install/setup.bash" >> ~/.bashrc
 
-################################
-## ADD ANY CUSTOM SETUP BELOW ##
-################################S
+WORKDIR /X1_ROS2_ws
 USER root 
