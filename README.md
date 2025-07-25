@@ -1,6 +1,14 @@
 # Introduction
 This repository serves as a testing ground for the functionalities ROSMaster X1 robot. 
 
+High-level overview of the components in the ROS2 system as of July 25, 2025
+![Current components/functionalities in the X1_ROS2_ws workspace](https://github.com/MinhNguyen2000/X1_ROS2_ws/blob/main/images/X1_ROS2_ws_system.png)
+
+## Work in Progress
+- [ ]  Physical camera integrated into the robot
+- [ ]  Control the physical motors using the joysticks
+- [ ]  SLAM using slam_toolbox on the physical robot
+
 # Package Explanation
 
 ## x1_bringup
