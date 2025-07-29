@@ -1,18 +1,16 @@
-# common params
+camera_name: 'Astra_Pro_Plus'
 depth_registration: false
-enable_point_cloud: false
-enable_colored_point_cloud: false
-device_preset: "High Accuracy"
-laser_on_off_mode: 1 # 0: off, 1: on-off, 1: off-on
-time_domain: "global" # global, device, system
-enable_sync_host_time: false
-frames_per_trigger: 2
+serial_number: ''
+usb_port: ''
+device_num: 1
+vendor_id: 0x2bc5
+product_id: ''
 
-# When 3D reconstruction mode is enabled:
-# - The laser will switch to on-off mode
-# - IR images without the laser will be used for SLAM localization
-# - Depth images with the laser will be used because they provide better depth quality
-enable_3d_reconstruction_mode: true
+enable_point_cloud: true
+enable_colored_point_cloud: false
+cloud_frame_id: ''
+point_cloud_qos: default
+connection_delay: 100
 
 # Color stream configuration
 color_width: 640
@@ -51,3 +49,22 @@ ir_camera_info_qos: default
 enable_ir_auto_exposure: true
 ir_exposure: -1
 ir_gain: -1
+
+publish_tf: true
+tf_publish_rate: 0.0
+ir_info_url: ''
+color_info_url: ''
+log_level: none
+enable_publish_extrinsic: false
+enable_d2c_viewer: false
+enable_ldp: true
+enable_soft_filter: true
+soft_filter_max_diff: -1
+soft_filter_speckle_size: -1
+ordered_pc: false
+use_hardware_time: false
+enable_depth_scale: true
+align_mode: HW
+laser_energy_level: -1
+enable_heartbeat: false
+
