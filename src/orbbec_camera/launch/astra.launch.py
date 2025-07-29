@@ -86,9 +86,9 @@ def generate_launch_description():
             'camera_params.yaml'
         ),
         description='Full path to the YAML parameters file to load',
-    ),
+    )
 
-    parameters = LaunchConfiguration('params_file')
+    parameters = [LaunchConfiguration('params_file')]
 
     # get  ROS_DISTRO
     ros_distro = os.environ["ROS_DISTRO"]
