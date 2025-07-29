@@ -1,5 +1,5 @@
 # common params
-camera_name: 'Astra_Pro_Plus'
+camera_name: 'camera'
 depth_registration: false
 enable_point_cloud: false
 enable_colored_point_cloud: false
