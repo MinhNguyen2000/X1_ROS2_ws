@@ -48,6 +48,22 @@ RUN git clone https://github.com/YDLIDAR/YDLidar-SDK.git \
   && make -j4 \
   && sudo make install
 
+# Install packages for Orbbed Astra Pro camera
+RUN apt-get update && apt-get install -y \
+  libgflags-dev \
+  nlohmann-json3-dev  \
+  ros-${ROS_DISTRO}-image-transport \
+  ros-${ROS_DISTRO}-image-transport-plugins \
+  ros-${ROS_DISTRO}-compressed-image-transport \
+  ros-${ROS_DISTRO}-image-publisher \
+  ros-${ROS_DISTRO}-camera-info-manager \
+  ros-${ROS_DISTRO}-diagnostic-updater \
+  ros-${ROS_DISTRO}-diagnostic-msgs \
+  ros-${ROS_DISTRO}-statistics-msgs \
+  ros-${ROS_DISTRO}-backward-ros \
+  libdw-dev \
+&& rm -rf /var/lib/apt/lists/*
+
 # Add ubuntu user with same UID and GID as your host system, if it doesn't already exist
 # Since Ubuntu 24.04, a non-root user is created by default with the name vscode and UID=1000
 # Create new regular user (for easy file access between host and container)
