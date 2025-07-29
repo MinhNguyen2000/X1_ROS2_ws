@@ -1,53 +1,32 @@
 # common params
+camera_name: 'Astra_Pro_Plus'
 depth_registration: false
 enable_point_cloud: false
 enable_colored_point_cloud: false
-device_preset: "High Accuracy"
-laser_on_off_mode: 1 # 0: off, 1: on-off, 1: off-on
-time_domain: "global" # global, device, system
-enable_sync_host_time: false
-frames_per_trigger: 2
 
-# When 3D reconstruction mode is enabled:
-# - The laser will switch to on-off mode
-# - IR images without the laser will be used for SLAM localization
-# - Depth images with the laser will be used because they provide better depth quality
-enable_3d_reconstruction_mode: true
-
-# Color stream configuration
+# color params
+enable_color: true
 color_width: 640
 color_height: 480
 color_fps: 30
-color_format: 'MJPG'
-enable_color: true
-flip_color: false
-color_qos: default
-color_camera_info_qos: default
-enable_color_auto_exposure: true
-color_exposure: -1
-color_gain: -1
-enable_color_auto_white_balance: true
-color_white_balance: -1
+color_format: "MJPG"
+enable_color_auto_exposure: false
+color_exposure: 50 # 5ms
+color_gain: -1 # -1 default
 
-# Depth stream configuration
+# depth params
 depth_width: 640
 depth_height: 480
 depth_fps: 30
-depth_format: 'Y11'
-enable_depth: true
-flip_depth: false
-depth_qos: default
-depth_camera_info_qos: default
+depth_format: "Y11"
 
-# IR stream configuration
+# ir exposure
+enable_ir_auto_exposure: false
+ir_exposure: 5000 # 5ms
+ir_gain: 40
+
+enable_ir: true
 ir_width: 640
 ir_height: 480
 ir_fps: 30
-ir_format: 'Y11'
-enable_ir: true
-flip_ir: false
-ir_qos: default
-ir_camera_info_qos: default
-enable_ir_auto_exposure: true
-ir_exposure: -1
-ir_gain: -1
+ir_format: "Y10"
