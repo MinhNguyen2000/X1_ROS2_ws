@@ -77,7 +77,12 @@ def generate_launch_description():
     #     DeclareLaunchArgument('enable_heartbeat', default_value='false'),
     # ]
 
-    # Node configuration
+    camera_name_arg = DeclareLaunchArgument(
+        'camera_name',
+        default_value='camera',
+        description='Camera name namespace'
+    )
+
     params_file_arg = DeclareLaunchArgument(
         'params_file',
         default_value=os.path.join(
@@ -88,32 +93,32 @@ def generate_launch_description():
         description='Full path to the YAML parameters file to load',
     )
 
-    parameters = [LaunchConfiguration('params_file')]
+    namespace = LaunchConfiguration("camera_name")
+    parameters = [LaunchConfiguration("params_file")]
 
     # get  ROS_DISTRO
     ros_distro = os.environ["ROS_DISTRO"]
     if ros_distro == "foxy":
-        return LaunchDescription(
+        return LaunchDescription([
             # args
-            params_file_arg
-            + [
-                Node(
-                    package="orbbec_camera",
-                    executable="orbbec_camera_node",
-                    name="ob_camera_node",
-                    namespace=LaunchConfiguration("camera_name"),
-                    parameters=parameters,
-                    output="screen",
-                )
-            ]
-        )
+            camera_name_arg,
+            params_file_arg,
+            Node(
+                package="orbbec_camera",
+                executable="orbbec_camera_node",
+                name="ob_camera_node",
+                namespace=namespace,
+                parameters=parameters,
+                output="screen",
+            )
+        ])
     # Define the ComposableNode
     else:
         # Define the ComposableNode
         compose_node = ComposableNode(
             package="orbbec_camera",
             plugin="orbbec_camera::OBCameraNodeDriver",
-            name=LaunchConfiguration("camera_name"),
+            name=namespace,
             namespace="",
             parameters=parameters,
         )
@@ -130,6 +135,7 @@ def generate_launch_description():
         )
         # Launch description
         ld = LaunchDescription([
+            camera_name_arg,
             params_file_arg,
             GroupAction(
                 [PushRosNamespace(LaunchConfiguration("camera_name")), container]
