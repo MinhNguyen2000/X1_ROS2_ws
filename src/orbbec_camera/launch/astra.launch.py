@@ -96,49 +96,31 @@ def generate_launch_description():
     namespace = LaunchConfiguration("camera_name")
     parameters = [LaunchConfiguration("params_file")]
 
-    # get  ROS_DISTRO
-    ros_distro = os.environ["ROS_DISTRO"]
-    if ros_distro == "foxy":
-        return LaunchDescription([
-            # args
-            camera_name_arg,
-            params_file_arg,
-            Node(
-                package="orbbec_camera",
-                executable="orbbec_camera_node",
-                name="ob_camera_node",
-                namespace=namespace,
-                parameters=parameters,
-                output="screen",
-            )
-        ])
     # Define the ComposableNode
-    else:
-        # Define the ComposableNode
-        compose_node = ComposableNode(
-            package="orbbec_camera",
-            plugin="orbbec_camera::OBCameraNodeDriver",
-            name=namespace,
-            namespace="",
-            parameters=parameters,
+    compose_node = ComposableNode(
+        package="orbbec_camera",
+        plugin="orbbec_camera::OBCameraNodeDriver",
+        name=namespace,
+        namespace="",
+        parameters=parameters,
+    )
+    # Define the ComposableNodeContainer
+    container = ComposableNodeContainer(
+        name="camera_container",
+        namespace="",
+        package="rclcpp_components",
+        executable="component_container",
+        composable_node_descriptions=[
+            compose_node,
+        ],
+        output="screen",
+    )
+    # Launch description
+    ld = LaunchDescription([
+        camera_name_arg,
+        params_file_arg,
+        GroupAction(
+            [PushRosNamespace(LaunchConfiguration("camera_name")), container]
         )
-        # Define the ComposableNodeContainer
-        container = ComposableNodeContainer(
-            name="camera_container",
-            namespace="",
-            package="rclcpp_components",
-            executable="component_container",
-            composable_node_descriptions=[
-                compose_node,
-            ],
-            output="screen",
-        )
-        # Launch description
-        ld = LaunchDescription([
-            camera_name_arg,
-            params_file_arg,
-            GroupAction(
-                [PushRosNamespace(LaunchConfiguration("camera_name")), container]
-            )
-        ])
-        return ld
+    ])
+    return ld

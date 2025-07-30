@@ -30,7 +30,7 @@ def generate_launch_description():
         description='Full path to the YAML parameters file to load',
     )
 
-    camera_params = LaunchConfiguration('params_files')
+    camera_params = LaunchConfiguration('params_file')
 
     # Path to the orbbec astra pro plus launch file
     orbbec_camera_launch_file_dir = os.path.join(
