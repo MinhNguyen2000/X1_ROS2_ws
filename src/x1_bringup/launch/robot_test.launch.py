@@ -30,7 +30,7 @@ def generate_launch_description():
     )
 
     camera_params_file_arg = DeclareLaunchArgument(
-        'params_file',
+        'camera_params_file',
         default_value=os.path.join(
             get_package_share_directory('orbbec_camera'),
             'config',
@@ -40,7 +40,7 @@ def generate_launch_description():
     )
 
     camera_name = LaunchConfiguration("camera_name")
-    camera_params = LaunchConfiguration('params_file')
+    camera_params = LaunchConfiguration('camera_params_file')
 
 
     ydlidar = IncludeLaunchDescription(
