@@ -19,8 +19,21 @@ def generate_launch_description():
         'ydlidar_launch.py'
     )
 
+    # Path to the orbbec camera parameter file
+    camera_params_file_arg = DeclareLaunchArgument(
+        'params_file',
+        default_value = os.path.join(
+            get_package_share_directory('orbbec_camera'),
+            'config',
+            'camera_params.yaml'
+        ),
+        description='Full path to the YAML parameters file to load',
+    )
+
+    camera_params = LaunchConfiguration('params_files')
+
     # Path to the orbbec astra pro plus launch file
-    orbbec_camera_launch_file_dir = os.path.joint(
+    orbbec_camera_launch_file_dir = os.path.join(
         get_package_share_directory('orbbec_camera'),
         'launch',
         'astra.launch.py'
@@ -31,10 +44,14 @@ def generate_launch_description():
     )
 
     orbbec_camera = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(orbbec_camera_launch_file_dir)
+        PythonLaunchDescriptionSource(orbbec_camera_launch_file_dir),
+        launch_arguments={
+            'params_file': camera_params,
+        }.items()
     )
 
     return LaunchDescription([
         ydlidar,
+        camera_params_file_arg,
         orbbec_camera
     ])
