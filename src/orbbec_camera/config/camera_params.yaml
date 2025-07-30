@@ -5,16 +5,19 @@ enable_point_cloud: false
 enable_colored_point_cloud: false
 
 # color params
+color_qos: SENSOR_DATA
 enable_color: true
 color_width: 640
 color_height: 480
 color_fps: 30
 color_format: "MJPG"
 enable_color_auto_exposure: false
+color_brightness: 25
 color_exposure: 50 # 5ms
 color_gain: -1 # -1 default
 
 # depth params
+enable_depth: false
 depth_width: 640
 depth_height: 480
 depth_fps: 30
@@ -25,7 +28,7 @@ enable_ir_auto_exposure: false
 ir_exposure: 5000 # 5ms
 ir_gain: 40
 
-enable_ir: true
+enable_ir: false
 ir_width: 640
 ir_height: 480
 ir_fps: 30
