@@ -12,13 +12,29 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    # Launch the ydlidar_ros2_driver launch file
-    ydlidar_launch_file_dir = os.path.join(get_package_share_directory('ydlidar_ros2_driver'),'launch','ydlidar_launch.py')
-    
+    # Path to the ydlidar_ros2_driver launch file
+    ydlidar_launch_file_dir = os.path.join(
+        get_package_share_directory('ydlidar_ros2_driver'),
+        'launch',
+        'ydlidar_launch.py'
+    )
+
+    # Path to the orbbec astra pro plus launch file
+    orbbec_camera_launch_file_dir = os.path.joint(
+        get_package_share_directory('orbbec_camera'),
+        'launch',
+        'astra.launch.py'
+    )
+
     ydlidar = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(ydlidar_launch_file_dir)
     )
 
+    orbbec_camera = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(orbbec_camera_launch_file_dir)
+    )
+
     return LaunchDescription([
-        ydlidar
+        ydlidar,
+        orbbec_camera
     ])
