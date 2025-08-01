@@ -25,7 +25,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'Mcnamu_driver = x1_bringup.Mcnamu_driver:main'
+            'Mcnamu_driver = x1_bringup.Mcnamu_driver:main',
+            'image_republisher = x1_bringup.image_republisher:main'
         ],
     },
 )
