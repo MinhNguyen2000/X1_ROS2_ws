@@ -39,17 +39,9 @@ def generate_launch_description():
     )
 
     image_transport_node = Node(
-        package='image_transport',
-        executable='republish',
-        name='image_republisher',
-        arguments=['compressed','raw'],
-        remappings=[
-            ('in/compressed','/camera/color/image_raw/compressed'),
-            ('out','/camera/color/image_raw/uncompressed')
-        ],
-        parameters=[
-            {'qos_overrides./camera/color/image_raw/compressed.reliability': 'best_effort'}
-        ]
+        package='x1_bringup',
+        executable='image_republisher',
+        name='image_republisher'
     )
 
     rviz = Node(
