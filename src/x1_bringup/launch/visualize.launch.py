@@ -38,6 +38,20 @@ def generate_launch_description():
         executable='joint_state_publisher'
     )
 
+    image_transport_node = Node(
+        package='image_transport',
+        executable='republish',
+        name='image_republisher',
+        arguments=['compressed','raw'],
+        remappings=[
+            ('in/compressed','/camera/color/image_raw/compressed'),
+            ('out','/camera/color/image_raw/uncompressed')
+        ],
+        parameters=[
+            {'qos_overrides./camera/color/image_raw/compressed.reliability': 'best_effort'}
+        ]
+    )
+
     rviz = Node(
         package="rviz2",
         executable="rviz2",
@@ -52,5 +66,6 @@ def generate_launch_description():
         model_arg,
         robot_state_publisher_node,
         joint_state_publisher_node,
+        image_transport_node,
         rviz
     ])
