@@ -12,7 +12,6 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    
     model_arg = DeclareLaunchArgument(
         name = "model",
         default_value = os.path.join(
@@ -41,7 +40,8 @@ def generate_launch_description():
     image_transport_node = Node(
         package='x1_bringup',
         executable='image_republisher',
-        name='image_republisher'
+        name='image_republisher',
+        namespace='/camera'
     )
 
     rviz = Node(
