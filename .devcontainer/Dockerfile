@@ -64,10 +64,6 @@ RUN apt-get update && apt-get install -y \
   libdw-dev \
 && rm -rf /var/lib/apt/lists/*
 
-# Set shared library path and cuda tools executable paths for CUDA inference
-ENV LD_LIBRARY_PATH=/usr/local/cuda-10.2/targets/aarch64-linux/lib:/usr/lib/aarch64-linux-gnu/tegra:${LD_LIBRARY_PATH}
-ENV PATH=/usr/local/cuda-10.2/bin:${PATH}
-
 # Add ubuntu user with same UID and GID as your host system, if it doesn't already exist
 # Since Ubuntu 24.04, a non-root user is created by default with the name vscode and UID=1000
 # Create new regular user (for easy file access between host and container)
@@ -108,11 +104,6 @@ RUN rosdep update
 # Source the ROS setup file
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 RUN echo "source /X1_ROS2_ws/install/setup.bash" >> ~/.bashrc
-
-# Install ONNXRuntimeGPU wheel built for JetPack 4.6 + CUDA 10.2 + Python 3.10
-COPY onnxruntime_gpu-1.10.0-cp310-cp310-linux_aarch64.whl /tmp/
-RUN pip3 install /tmp/onnxruntime_gpu-1.10.0-cp310-cp310-linux_aarch64.whl && \
-    rm /tmp/onnxruntime_gpu-1.10.0-cp310-cp310-linux_aarch64.whl
 
 WORKDIR /X1_ROS2_ws
 USER root 
