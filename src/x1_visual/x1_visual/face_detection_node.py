@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CameraInfo
 from vision_msgs.msg import Detection2DArray, Detection2D
 from cv_bridge import CvBridge
 from ament_index_python.packages import get_package_share_directory
@@ -55,13 +55,28 @@ class FaceDetectionNode(Node):
         # --- ROS2 interfaces
         self.bridge = CvBridge()
         qos = QoSProfile(depth=10, reliability=QoSReliabilityPolicy.BEST_EFFORT)
-        self.sub = self.create_subscription(
+        self.image_sub = self.create_subscription(
             Image,
             input_topic,
             self.image_callback,
             qos_profile = qos
         )
-        self.pub = self.create_publisher(
+
+        self.camera_info: CameraInfo | None = None
+        self.camera_info_sub = self.create_subscription(
+            CameraInfo,
+            '/camera/color/camera_info',
+            self.camera_info_callback,
+            10
+        )
+
+        self.crop_pub = self.create_publisher(
+            Image, 
+            '/face_crop', 
+            qos_profile=qos
+        )
+
+        self.detection_pub = self.create_publisher(
             Detection2DArray,
             '/face_detection',
             qos_profile = qos
@@ -167,20 +182,53 @@ class FaceDetectionNode(Node):
                 results.append((boxes[i], confidences[i]))
 
         return results
-    
+
+    def _select_primary_face(self, detections, image_h, image_w):
+        '''
+        Select the primary face in the scene by considering bbox size and detection confidence
+        
+        Args:
+            detections: list of ((x1, y1, w, h), confidence) tuple of bboxes
+            image_h, image_w: dimensions of the original image for normalization
+        
+        Returns:
+            One primary detection tuple
+        '''
+        if not detections:
+            return None
+        if len(detections) == 1:
+            return detections[0]
+        
+        image_area = image_h * image_w
+
+        def score(detection):
+            (x1, y1, w, h), conf = detection
+            area_norm = w * h /image_area
+            return 0.4 * area_norm + 0.6 * conf
+        
+        return max(detections, key=score)
+
     def image_callback(self, msg: Image):
+        # --- Wait for camera info
+        if self.camera_info is None:
+            self.get_logger().info('Waiting for camera information')
+            return
+        
+        fx_camera = self.camera_info.k[0]
+        cx_camera = self.camera_info.k[2]
+
         # --- Convert ROS image message to OpenCV BGR
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         image_h, image_w = cv_image.shape[:2]
 
         # --- DEBUG - confirm images are arriving
-        self.get_logger().info(f'Image received: {image_w}x{image_h}')
+        self.get_logger().debug(f'Image received: {image_w}x{image_h}')
 
         # --- TODO: Preprocess the image => (1, 3, H, W) float32
         img = self._preprocess(cv_image)
 
         # DEBUG 2 — confirm preprocessed shape and value range
-        self.get_logger().info(
+        self.get_logger().debug(
             f'Preprocessed: shape={img.shape} '
             f'min={img.min():.3f} max={img.max():.3f}'
         )
@@ -194,21 +242,58 @@ class FaceDetectionNode(Node):
         # --- TODO: Postprocess to decode the boxes and apply non-maximal suppression (NMS)
         detections = self._postprocess(raw_output, image_h, image_w)
 
+        primary_face = self._select_primary_face(detections, image_h, image_w)
+
+        # --- Crop the primary face and publish
+        if primary_face is not None:
+            (x1, y1, w, h), _ = primary_face
+
+            # Clamp coordinates to boundaries
+            x1c = max(x1, 0)
+            y1c = max(y1, 0)
+            x2c = min(image_w, x1 + w)
+            y2c = min(image_h, y1 + h)
+
+            crop_w = x2c - x1c
+            crop_h = y2c - y1c
+            crop = cv_image[y1c:y2c, x1c:x2c]
+            if crop.size > 0:
+                crop_msg = self.bridge.cv2_to_imgmsg(crop, encoding='bgr8')
+                crop_msg.header = msg.header
+                self.crop_pub.publish(crop_msg)
+                # self.get_logger().info(f'Published a cropped image ({crop_w:4d},{crop_h:4d})')
+
         # --- Package into the Dection2DArray and publish
         det_array_msg = Detection2DArray()
         det_array_msg.header = msg.header
-
-        for (x1, y1, w, h), _ in detections:
+        
+        if primary_face is not None:
+            (x1, y1, w, h), conf = primary_face
+            bbox_cx = float(x1 + w/2)
+            bbox_cy = float(y1 + h/2)
             det = Detection2D()
-            det.bbox.center.position.x = float(x1 + w/2)
-            det.bbox.center.position.y = float(y1 + h/2)
+            det.bbox.center.position.x = bbox_cx
+            det.bbox.center.position.y = bbox_cy
             det.bbox.size_x = float(w)
             det.bbox.size_y = float(h)
             det_array_msg.detections.append(det)
 
-        self.pub.publish(det_array_msg)
-        self.get_logger().debug(f'Published {len(detections)} face detections')
-        
+            # Calculate bearing
+            bearing_rad = np.arctan2(bbox_cx - cx_camera, fx_camera)
+            bearing_deg = np.degrees(bearing_rad)
+
+            # Calculate distance
+            w_real = 0.14
+            distance = w_real / w * fx_camera
+
+            self.get_logger().info(f'Distance: {distance: 5.2f} | Bearing: {bearing_deg: 5.2f} | Confidence: {conf: 5.2f}')
+
+        self.detection_pub.publish(det_array_msg)
+        self.get_logger().info(f'Published {len(detections)} face detections')
+
+    def camera_info_callback(self, msg: CameraInfo):
+        self.camera_info = msg
+
 def main():
 
     rclpy.init()
