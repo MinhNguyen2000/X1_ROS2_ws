@@ -1,4 +1,6 @@
 from setuptools import find_packages, setup
+import os
+from glob import glob
 
 package_name = 'x1_visual'
 
@@ -13,8 +15,8 @@ setup(
         # launch files
         # config files
         # model weights
-        (os.path.join('share', package_name, 'models'), glob('models/face_detection/*.pth')),
-        (os.path.join('share', package_name, 'models'), glob('models/emotion_recognition/*.pth'))
+        (os.path.join('share', package_name, 'models', 'face_detection'), glob('models/face_detection/*.onnx')),
+        (os.path.join('share', package_name, 'models', 'emotion_recognition'), glob('models/emotion_recognition/*.onnx'))
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -29,6 +31,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'face_detection = x1_visual.face_detection_node:main'
         ],
     },
 )
