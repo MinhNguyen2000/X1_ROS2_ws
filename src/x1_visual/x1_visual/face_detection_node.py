@@ -3,6 +3,7 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import Image, CameraInfo
 from vision_msgs.msg import Detection2DArray, Detection2D
+from geometry_msgs.msg import PoseStamped
 from cv_bridge import CvBridge
 from ament_index_python.packages import get_package_share_directory
 
@@ -22,6 +23,7 @@ class FaceDetectionNode(Node):
         self.declare_parameter('nms_threshold', 0.45)
         self.declare_parameter('input_hw', [640, 640])
         self.declare_parameter('use_trt', True)
+        self.declare_parameter('assumed_face_width', 0.14)          # average adult face width (m)
 
         model_name          = self.get_parameter('model_name').value
         input_topic         = self.get_parameter('input_topic').value
@@ -29,6 +31,7 @@ class FaceDetectionNode(Node):
         self.nms_threshold  = self.get_parameter('nms_threshold').value
         input_hw            = self.get_parameter('input_hw').value
         use_trt             = self.get_parameter('use_trt').value
+        self.assumed_face_width = self.get_parameter('assumed_face_width').value
         self.input_h, self.input_w = input_hw
 
         # --- Locate the ONNX model
@@ -81,6 +84,18 @@ class FaceDetectionNode(Node):
             '/face_detection',
             qos_profile = qos
         )
+
+        self.face_pose_pub = self.create_publisher(
+            PoseStamped,
+            '/face_pose',
+            10
+        )
+
+        # --- Declare variables
+        self.face_x_smooth = 0.0
+        self.face_y_smooth = 0.0
+        self.face_z_smooth = 0.0
+        self.smooth_alpha = 0.9
 
     def _load_session(self, model_path: str, use_trt: bool) -> ort.InferenceSession:
         "Build an ONNXRuntime Inference Session with TensorRT (by default) or CUDA EP"
@@ -208,6 +223,43 @@ class FaceDetectionNode(Node):
         
         return max(detections, key=score)
 
+    def _estimate_face_pose(self, bbox_cx: float, bbox_cy: float, bbox_w: float, stamp) -> PoseStamped | None:
+        '''
+        Monocular depth estimate of the 3D position of the face in the camera
+        optical frame using the pinhole camera model and an assumed physical 
+        face width.
+        
+        The camera optical frame convention:
+            X: right
+            Y: down
+            Z: forward (into the scene)
+        '''
+        fx_camera = self.camera_info.k[0]
+        fy_camera = self.camera_info.k[4]
+        cx_camera = self.camera_info.k[2]
+        cy_camera = self.camera_info.k[5]
+
+        if bbox_w <= 0:
+            return None
+
+        z = self.assumed_face_width * fx_camera / bbox_w
+        x = (bbox_cx - cx_camera) / fx_camera * z
+        y = (bbox_cy - cy_camera) / fy_camera * z
+
+        self.face_x_smooth = self.smooth_alpha * self.face_x_smooth + (1-self.smooth_alpha) * x if self.face_x_smooth else x
+        self.face_y_smooth = self.smooth_alpha * self.face_y_smooth + (1-self.smooth_alpha) * y if self.face_y_smooth else y
+        self.face_z_smooth = self.smooth_alpha * self.face_z_smooth + (1-self.smooth_alpha) * z if self.face_z_smooth else z
+
+        pose = PoseStamped()
+        pose.header.stamp = stamp
+        pose.header.frame_id = 'camera_color_optical_frame'
+        pose.pose.position.x     = float(self.face_x_smooth)
+        pose.pose.position.y     = float(self.face_y_smooth)
+        pose.pose.position.z     = float(self.face_z_smooth)
+        pose.pose.orientation.w  = 1.0     # identity — orientation not estimated
+
+        return pose
+
     def image_callback(self, msg: Image):
         # --- Wait for camera info
         if self.camera_info is None:
@@ -224,7 +276,7 @@ class FaceDetectionNode(Node):
         # --- DEBUG - confirm images are arriving
         self.get_logger().debug(f'Image received: {image_w}x{image_h}')
 
-        # --- TODO: Preprocess the image => (1, 3, H, W) float32
+        # --- Preprocess the image => (1, 3, H, W) float32
         img = self._preprocess(cv_image)
 
         # DEBUG 2 — confirm preprocessed shape and value range
@@ -234,62 +286,53 @@ class FaceDetectionNode(Node):
         )
 
         # --- Run the inference using ORT
-        raw_output = self.session.run(
-            [self.output_name],
-            {self.input_name: img}
-        )[0]
+        raw_output = self.session.run([self.output_name], {self.input_name: img})[0]
 
-        # --- TODO: Postprocess to decode the boxes and apply non-maximal suppression (NMS)
+        # --- Postprocess to decode the boxes and apply non-maximal suppression (NMS)
         detections = self._postprocess(raw_output, image_h, image_w)
 
         primary_face = self._select_primary_face(detections, image_h, image_w)
 
+        if primary_face is None:
+            return
+        
         # --- Crop the primary face and publish
-        if primary_face is not None:
-            (x1, y1, w, h), _ = primary_face
+        (x1, y1, w, h), _ = primary_face
 
-            # Clamp coordinates to boundaries
-            x1c = max(x1, 0)
-            y1c = max(y1, 0)
-            x2c = min(image_w, x1 + w)
-            y2c = min(image_h, y1 + h)
 
-            crop_w = x2c - x1c
-            crop_h = y2c - y1c
-            crop = cv_image[y1c:y2c, x1c:x2c]
-            if crop.size > 0:
-                crop_msg = self.bridge.cv2_to_imgmsg(crop, encoding='bgr8')
-                crop_msg.header = msg.header
-                self.crop_pub.publish(crop_msg)
-                # self.get_logger().info(f'Published a cropped image ({crop_w:4d},{crop_h:4d})')
+        x1c = max(x1, 0)
+        y1c = max(y1, 0)
+        x2c = min(image_w, x1 + w)
+        y2c = min(image_h, y1 + h)
+
+        crop = cv_image[y1c:y2c, x1c:x2c]
+        if crop.size > 0:
+            crop_msg = self.bridge.cv2_to_imgmsg(crop, encoding='bgr8')
+            crop_msg.header = msg.header
+            self.crop_pub.publish(crop_msg)
+            # crop_w = x2c - x1c; crop_h = y2c - y1c
+            # self.get_logger().info(f'Published a cropped image ({crop_w:4d},{crop_h:4d})')
 
         # --- Package into the Dection2DArray and publish
         det_array_msg = Detection2DArray()
         det_array_msg.header = msg.header
         
-        if primary_face is not None:
-            (x1, y1, w, h), conf = primary_face
-            bbox_cx = float(x1 + w/2)
-            bbox_cy = float(y1 + h/2)
-            det = Detection2D()
-            det.bbox.center.position.x = bbox_cx
-            det.bbox.center.position.y = bbox_cy
-            det.bbox.size_x = float(w)
-            det.bbox.size_y = float(h)
-            det_array_msg.detections.append(det)
-
-            # Calculate bearing
-            bearing_rad = np.arctan2(bbox_cx - cx_camera, fx_camera)
-            bearing_deg = np.degrees(bearing_rad)
-
-            # Calculate distance
-            w_real = 0.14
-            distance = w_real / w * fx_camera
-
-            self.get_logger().info(f'Distance: {distance: 5.2f} | Bearing: {bearing_deg: 5.2f} | Confidence: {conf: 5.2f}')
+        bbox_cx = float(x1 + w/2)
+        bbox_cy = float(y1 + h/2)
+        det = Detection2D()
+        det.bbox.center.position.x = bbox_cx
+        det.bbox.center.position.y = bbox_cy
+        det.bbox.size_x = float(w)
+        det.bbox.size_y = float(h)
+        det_array_msg.detections.append(det)
 
         self.detection_pub.publish(det_array_msg)
         self.get_logger().info(f'Published {len(detections)} face detections')
+
+        # --- Estimate face pose and publish
+        pose = self._estimate_face_pose(bbox_cx=bbox_cx, bbox_cy=bbox_cy, bbox_w=w, stamp=msg.header.stamp)
+        if pose is not None:
+            self.face_pose_pub.publish(pose)
 
     def camera_info_callback(self, msg: CameraInfo):
         self.camera_info = msg
