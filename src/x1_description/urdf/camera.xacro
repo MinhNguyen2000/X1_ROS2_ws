@@ -9,7 +9,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
     </xacro:common_link>
-    <xacro:fixed_joint name="camera_joint" parent="base_link" child="camera_link" xyz="0.057105 1.7948E-05 0.03755" rpy="0 0 0"/>
+    <xacro:fixed_joint name="camera_joint" parent="base_link" child="camera_link" xyz="0.085105 1.7948E-05 0.04555" rpy="0 -0.415 0"/>
 
     <!-- Optical camera link & joint -->
     <link name="camera_link_optical"></link>
