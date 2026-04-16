@@ -30,13 +30,13 @@ class X1Driver(Node):
         self.angular_limit_arg_ = self.declare_parameter("angular_speed_limit", 5.0)
         self.nav_use_rotvel_arg_ = self.declare_parameter("nav_use_rotvel", False)
 
-        self.car_type_ = self.get_parameter("car_type").get_parameter_value().double_value()
-        self.imu_link_ = self.get_parameter("imu_link").get_parameter_value().double_value()
-        self.Prefix_ = self.get_parameter("prefix").get_parameter_value().double_value()
-        self.xlinear_limit_ = self.get_parameter("xlinear_speed_limit").get_parameter_value().double_value()
-        self.ylinear_limit_ = self.get_parameter("ylinear_speed_limit").get_parameter_value().double_value()
-        self.angular_limit_ = self.get_parameter("angular_speed_limit").get_parameter_value().double_value()
-        self.nav_use_rotvel_ = self.get_parameter("nav_use_rotvel").get_parameter_value().double_value()
+        self.car_type_ = self.get_parameter("car_type").get_parameter_value().string_value
+        self.imu_link_ = self.get_parameter("imu_link").get_parameter_value().string_value
+        self.Prefix_ = self.get_parameter("prefix").get_parameter_value().string_value
+        self.xlinear_limit_ = self.get_parameter("xlinear_speed_limit").get_parameter_value().double_value
+        self.ylinear_limit_ = self.get_parameter("ylinear_speed_limit").get_parameter_value().double_value
+        self.angular_limit_ = self.get_parameter("angular_speed_limit").get_parameter_value().double_value
+        self.nav_use_rotvel_ = self.get_parameter("nav_use_rotvel").get_parameter_value().bool_value
 
         # Create the subscriber objects
         self.vel_sub_ = self.create_subscription(Twist, "cmd_vel", self.cmd_vel_callback, 1)
@@ -119,13 +119,11 @@ class X1Driver(Node):
 
         state.header.stamp = time_stamp.to_msg()
         state.header.frame_id = "joint_states"
-        if len(self.Prefix)==0:
-            state.name = ["back_right_joint", "back_left_joint","front_left_steer_joint","front_left_wheel_joint",
-							"front_right_steer_joint", "front_right_wheel_joint"]
+        if len(self.Prefix_)==0:
+            state.name = ["front_left_joint", "back_left_joint", "front_right_joint", "back_right_joint"]
         else:
-            state.name = [self.Prefix_+"back_right_joint",self.Prefix_+ "back_left_joint",
-                        self.Prefix_+"front_left_steer_joint",self.Prefix_+"front_left_wheel_joint",
-						self.Prefix_+"front_right_steer_joint", self.Prefix_+"front_right_wheel_joint"]
+            state.name = [self.Prefix_+"front_left_joint",self.Prefix_+ "back_left_joint", 
+                          self.Prefix_+"front_right_joint", self.Prefix_+"back_right_joint"]
 
         # Obtain sensor data from the car
         edition.data = self.car.get_version()
@@ -163,10 +161,18 @@ class X1Driver(Node):
         self.vol_pub_.publish(battery)
         self.Edi_pub_.publish(edition)
 
-        state.position = [0, 0, 0, 0]
-        if not (vx == vy == angular == 0):
-            i = random.uniform(-3.14, 3.14)
-            state.position = [i, i, i, i]
+        m1, m2, m3, m4 = self.car.get_motor_encoder()
+
+        # 11 ticks per shaft rev, 30:1 input:output shaft, 4 for quadrature
+        ticks_per_rev = 11 * 30 * 4     
+
+        state.position = [0.0, 0.0, 0.0, 0.0]
+        state.position = [
+            int(m1) / ticks_per_rev * 2 * math.pi,
+            int(m2) / ticks_per_rev * 2 * math.pi,
+            int(m3) / ticks_per_rev * 2 * math.pi,
+            int(m4) / ticks_per_rev * 2 * math.pi,
+        ]
         
         self.state_pub_.publish(state)
 
