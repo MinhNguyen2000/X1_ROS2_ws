@@ -42,7 +42,6 @@ def generate_launch_description():
     camera_name = LaunchConfiguration("camera_name")
     camera_params = LaunchConfiguration('camera_params_file')
 
-
     ydlidar = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(ydlidar_launch_file_dir)
     )
