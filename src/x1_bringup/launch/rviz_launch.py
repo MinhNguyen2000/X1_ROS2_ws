@@ -39,6 +39,7 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         parameters = [{"robot_description": robot_description}],
+        condition=IfCondition(use_gazebo)
     )
     
     joint_state_publisher_node = Node(
