@@ -17,23 +17,29 @@ def generate_launch_description():
 
     # LiDAR scan matcher package
     laser_scan_matcher_node = Node(
-        package='rf2o_laser_odometry',
-        executable='rf2o_laser_odometry_node',
-        name='rf2o_laser_odometry',
-        output='screen',
+        package="rf2o_laser_odometry",
+        executable="rf2o_laser_odometry_node",
+        name="rf2o_laser_odometry",
+        output="screen",
         parameters=[{
-            'laser_scan_topic' : '/scan',
-            'odom_topic' : '/odom_rf2o',
-            'publish_tf' : True,
-            'base_frame_id' : 'base_footprint',
-            'odom_frame_id' : 'odom',
-            'init_pose_from_topic' : '',
-            'freq' : 20.0}],
+            "laser_scan_topic" : "/scan",
+            "odom_topic" : "/odom_rf2o",
+            "publish_tf" : True,
+            "base_frame_id" : "base_footprint",
+            "odom_frame_id" : "odom",
+            "init_pose_from_topic" : "",
+            "freq" : 20.0}],
     )
 
-    # TODO - implement a covariance filter node to publish wheel and IMU covariance
+    # Covariance filter node to publish IMU + LiDAR + wheel encoder covariance
+    covariance_filter_node = Node(
+        package="x1_bringup",
+        executable="covariance_filter_node",
+        name="covariance_filter",
+        output="screen"
+    )
 
-    # TODO - EKF node
+    # EKF node
     ekf_odom_node = Node(
         package = "robot_localization",
         executable = "ekf_node",
@@ -45,6 +51,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         laser_scan_matcher_node,
+        covariance_filter_node,
         ekf_odom_node
     ])
 

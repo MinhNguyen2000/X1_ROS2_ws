@@ -26,7 +26,8 @@ setup(
     entry_points={
         'console_scripts': [
             'Mcnamu_driver = x1_bringup.Mcnamu_driver:main',
-            'image_republisher = x1_bringup.image_republisher:main'
+            'image_republisher = x1_bringup.image_republisher:main',
+            'covariance_filter_node = x1_bringup.covariance_filter:main'
         ],
     },
 )

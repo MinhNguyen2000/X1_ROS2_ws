@@ -78,11 +78,11 @@ ekf_odom_node:
 # default values, and must be specified.
         # ===== Wheel encoder odometry =====
         # /vel_raw publishes body-frame linear + angular velocity (twist only, no pose)
-        odom0: /vel_raw
+        odom0: /vel_covariance
         odom0_config: [false,   false,  false,
                        false,   false,  false,
                        true,    true,   false,
-                       false,   false,  true,
+                       false,   false,  false,
                        false,   false,  false]
         odom0_queue_size: 10
         odom0_nodelay: false
@@ -91,7 +91,7 @@ ekf_odom_node:
 
         # ===== LiDAR scan matching =====
         # Use the pose + covariance for correcting encoder drift
-        odom1: /odom_rf2o
+        odom1: /odom_rf2o_covariance
         odom1_config: [true,    true,   false,
                        false,   false,  true,
                        true,    true,   false,
@@ -105,7 +105,7 @@ ekf_odom_node:
 
         # ===== IMU =====
         # Fuse the angular velocity & linear
-        imu0: /imu/data_raw
+        imu0: /imu/data_covariance
         imu0_config: [false,    false,  false,
                       false,    false,  false,
                       false,    false,  false,
