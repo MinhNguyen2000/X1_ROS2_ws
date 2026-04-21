@@ -6,7 +6,7 @@ from Rosmaster_Lib import Rosmaster
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Float32, Int32, Bool
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, TwistStamped
 from sensor_msgs.msg import Imu, MagneticField, JointState
 
 # from dynamic_reconfigure.server import Server
@@ -39,7 +39,7 @@ class X1Driver(Node):
         self.nav_use_rotvel_ = self.get_parameter("nav_use_rotvel").get_parameter_value().bool_value
 
         # Create the subscriber objects
-        self.vel_sub_ = self.create_subscription(Twist, "cmd_vel", self.cmd_vel_callback, 1)
+        self.vel_sub_ = self.create_subscription(TwistStamped, "cmd_vel", self.cmd_vel_callback, 1)
         self.RGBLight_sub_ = self.create_subscription(Int32, "RGBLight", self.RGBLightcallback, 100)
         self.Buzzer_sub_ = self.create_subscription(Bool, "Buzzer", self.Buzzercallback, 100)
         
@@ -47,7 +47,7 @@ class X1Driver(Node):
         self.Edi_pub_ = self.create_publisher(Float32, "edition", 100)
         self.vol_pub_ = self.create_publisher(Float32, "voltage", 100)
         self.state_pub_ = self.create_publisher(JointState, "joint_states", 100)
-        self.vel_pub_ = self.create_publisher(Twist, "/vel_raw", 100)
+        self.vel_pub_ = self.create_publisher(TwistStamped, "/vel_raw", 100)
         self.imu_pub_ = self.create_publisher(Imu, "/imu/data_raw", 100)
         self.mag_pub_ = self.create_publisher(MagneticField, "/imu/mag", 100)
 
@@ -69,10 +69,10 @@ class X1Driver(Node):
         angular = msg.angular.z
         Note: Because this model is a Mecanum wheel, it can move on the y-axis. It is not applicable to other models.
         '''
-        if not isinstance(msg, Twist): return
-        vx = msg.linear.x
-        vy = msg.linear.y
-        angular = msg.angular.z
+        if not isinstance(msg, TwistStamped): return
+        vx = msg.twist.linear.x
+        vy = msg.twist.linear.y
+        angular = msg.twist.angular.z
         self.car.set_car_motion(vx, vy, angular)
 
     def RGBLightcallback(self, msg):
@@ -111,7 +111,7 @@ class X1Driver(Node):
         # Configure message interface
         time_stamp = self.get_clock().now()
         imu = Imu()
-        twist = Twist()
+        twiststamped = TwistStamped()
         battery = Float32()
         edition = Float32()
         mag = MagneticField()
@@ -150,12 +150,13 @@ class X1Driver(Node):
         mag.magnetic_field.y = my
         mag.magnetic_field.z = mz
 
-        twist.linear.x = vx
-        twist.linear.y = vy
-        twist.angular.z = angular
+        twiststamped.header.stamp = time_stamp.to_msg()
+        twiststamped.twist.linear.x = vx
+        twiststamped.twist.linear.y = vy
+        twiststamped.twist.angular.z = angular
 
         # Publishing the real robot data on corresponding topics
-        self.vel_pub_.publish(twist)
+        self.vel_pub_.publish(twiststamped)
         self.imu_pub_.publish(imu)
         self.mag_pub_.publish(mag)
         self.vol_pub_.publish(battery)
