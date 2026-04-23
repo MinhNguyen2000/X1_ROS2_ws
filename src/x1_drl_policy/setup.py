@@ -31,6 +31,7 @@ setup(
     entry_points={
         'console_scripts': [
             'policy_node = x1_drl_policy.policy_node:main',
+            'face_follower_node = x1_drl_policy.face_follower_node:main',
         ],
     },
 )
