@@ -6,15 +6,19 @@ from geometry_msgs.msg import Quaternion, PoseStamped, TwistStamped
 from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.action.server import ServerGoalHandle
 from rclpy.executors import MultiThreadedExecutor       # to prevent blocking code while navigating to the goal
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from x1_drl_interfaces.action import NavigateToGoal
 
 import numpy as np
 # TODO - import torch related packages for DRL inference (torch and torch.nn)
 import torch, torch.nn as nn
-from stable_baselines3 import TD3, SAC
+# from stable_baselines3 import TD3, SAC
+import gymnasium as gym
+from stable_baselines3.td3.policies import Actor
+
 from ament_index_python.packages import get_package_share_directory
 import os
-import pickle
+import json
 import time
 import copy
 import signal
@@ -43,20 +47,25 @@ class DRLPolicyNode(Node):
         # Assume that the models and norm stats are stored under drl_policy/policy/TD3_xxx/model.zip and norm_stats.pkl
         pkg_dir = get_package_share_directory('x1_drl_policy')
         model_dir = os.path.join(pkg_dir, 'policies', self.model_name)
-        model_path = os.path.join(model_dir, "model")
-        norm_stat_path = os.path.join(model_dir, "norm_stats.pkl")
+        # model_path = os.path.join(model_dir, "model")
+        norm_stat_path = os.path.join(model_dir, "norm_stats.npz")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        if self.model_type == "TD3":
-            model = TD3.load(model_path, device=self.device)
-        elif self.model_type == "SAC":
-            model = SAC.load(model_path, device=self.device)
-        self.policy = model.policy.actor
+        self.policy = Actor(
+            observation_space=gym.spaces.Box(low=-np.inf, high=np.inf, shape=(27,), dtype=np.float32),
+            action_space=gym.spaces.Box(low=np.array([0.0, -1.0]), high=np.array([1.0, 1.0]), dtype=np.float32),
+            net_arch=[512, 256],
+            features_extractor=torch.nn.Identity(),   # MlpPolicy uses FlattenExtractor but weights already flattened
+            features_dim=27,
+            activation_fn=torch.nn.ReLU,
+            normalize_images=False,
+        ).to(self.device)
         self.policy.eval()
 
-        # load observation normalization stats
-        with open(norm_stat_path, 'rb') as f:
-            self.vec_norm = pickle.load(f)
-        self.vec_norm.training=False
+        # Load norm stats
+        norm = np.load(norm_stat_path)
+        self.obs_mean    = norm["mean"].astype(np.float32)
+        self.obs_var     = norm["var"].astype(np.float32)
+        self.clip_obs    = float(norm["clip_obs"][0])
 
         # TODO - read n_ray_groups and obs_space size dynamically from the loaded model
         self.n_ray_groups = 18
@@ -84,9 +93,10 @@ class DRLPolicyNode(Node):
         self.latest_scan: LaserScan | None = None
 
         # --- Subscribers & Publisher ---
+        qos = QoSProfile(depth=10, reliability=QoSReliabilityPolicy.BEST_EFFORT)
         # TODO - make the topic name dynamic according to /agent_name/odom namespace when this node is launched
-        self.odom_sub = self.create_subscription(Odometry,'/odom', self.odom_callback,10)
-        self.lidar_sub = self.create_subscription(LaserScan, '/scan', self.lidar_callback, 10)
+        self.odom_sub = self.create_subscription(Odometry,'/odom', self.odom_callback, qos)
+        self.lidar_sub = self.create_subscription(LaserScan, '/scan', self.lidar_callback, qos)
         # TODO - make the topic name dynamic according to /agent_name/cmd_vel namespace when this node is launched
         self.cmd_pub = self.create_publisher(TwistStamped, '/cmd_vel', 10)
 
@@ -211,7 +221,7 @@ class DRLPolicyNode(Node):
             
             # self.get_logger().info(
             #     f'obs → ({obs[0]: 5.3f} | {obs[1]: 5.3f} | {obs[2]: 5.3f})   '
-            #     f'({np.atan2(obs[4], obs[3]): 5.3f} | {np.atan2(obs[6], obs[5]): 5.3f})   '
+            #     f'({np.arctan2(obs[4], obs[3]): 5.3f} | {np.arctan2(obs[6], obs[5]): 5.3f})   '
             #     f'({obs[7]: 5.3f}|{obs[8]: 5.3f})   '
             #     f'lidar:{obs[9:]}'
             # )
@@ -280,7 +290,7 @@ class DRLPolicyNode(Node):
     def _yaw_from_quaternion(self, q: Quaternion) -> float:
         siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
         cosy_cosp = 1.0 - 2.0 * (q.y**2 + q.z**2)
-        return np.atan2(siny_cosp, cosy_cosp, dtype=np.float32)
+        return np.arctan2(siny_cosp, cosy_cosp, dtype=np.float32)
 
     def _get_obs(self, odom: Odometry, target: PoseStamped, scan: LaserScan) -> np.ndarray:
         '''
@@ -323,7 +333,7 @@ class DRLPolicyNode(Node):
         # LIDAR min pooling
         raw = np.array(scan.ranges, dtype=np.float32)
         raw = np.where(np.isfinite(raw), raw, scan.range_max)       # replace inf/nan with max LiDAR range values
-        antennae_mask = raw < 0.15
+        antennae_mask = raw <= 0.20
         raw[antennae_mask] = scan.range_max                         # drop anything below the minimum LiDAR scan range 
         raw = np.clip(raw, 0.0, scan.range_max)
         raw = np.flip(raw)
@@ -340,9 +350,8 @@ class DRLPolicyNode(Node):
         return self._obs_buffer
         
     def _normalize_obs(self, obs: np.ndarray) -> np.ndarray:
-        obs_batch = obs.reshape(1,-1)       # VecNormalize expects a batc dimension representing the parallel envs
-        obs_normalized = self.vec_norm.normalize_obs(obs_batch)
-        return obs_normalized.reshape(-1).astype(np.float32)
+        obs_normed = (obs - self.obs_mean) / np.sqrt(self.obs_var + 1e-8)
+        return np.clip(obs_normed, -self.clip_obs, self.clip_obs).astype(np.float32)
 
     def _get_rewards(self, obs):
         d_goal = obs[2]
