@@ -31,8 +31,8 @@ class DRLPolicyNode(Node):
         self.declare_parameter('goal_tolerance', 0.5)
         self.declare_parameter('obstacle_tolerance', 0.20)
         self.declare_parameter('model_name', 'TD3_001')
-        self.declare_parameter('max_lin_vel', 0.6)
-        self.declare_parameter('max_angular_vel', 0.9)
+        self.declare_parameter('max_lin_vel', 1.2)
+        self.declare_parameter('max_angular_vel', 1.8)
         self.declare_parameter('goal_timeout', 30.0)
 
         self.default_goal_tolerance     = self.get_parameter('goal_tolerance').value
@@ -141,7 +141,10 @@ class DRLPolicyNode(Node):
         # Overwrite any current goal
         if self._current_goal_handle is not None and self._current_goal_handle.is_active:
             self.get_logger().info('Changing the current goal.')
-            self._current_goal_handle.abort()
+            try:
+                self._current_goal_handle.abort()
+            except:
+                pass
 
         return GoalResponse.ACCEPT
         
@@ -185,6 +188,12 @@ class DRLPolicyNode(Node):
         while rclpy.ok():
             ctrl_iter_start = time.time()
             elapsed_time = time.time() - start
+
+            if not goal_handle.is_active:       # stop the robot if no goal handle
+                cmd = TwistStamped()
+                cmd.header.stamp = self.get_clock().now().to_msg()
+                self.cmd_pub.publish(cmd)
+                return result_msg
 
             # --- Check for cancellation ---
             if goal_handle.is_cancel_requested:
@@ -257,6 +266,7 @@ class DRLPolicyNode(Node):
 
             self.action[0] = np.clip(self.action[0], 0.0, 1.0)
             self.action[1] = np.clip(self.action[1], -1.0, 1.0)
+            # self.get_logger().info(f"Policy action: {self.action[0]:5.3f}, {self.action[1]:5.3f}")
 
             self._get_rewards(obs)
 
@@ -346,6 +356,8 @@ class DRLPolicyNode(Node):
         self._obs_buffer[5:7] = c_bearing, s_bearing
         self._obs_buffer[7:9] = agent_vx, agent_vyaw
         self._obs_buffer[9:]  = lidar_obs
+        self.get_logger().info(f"(dx,dy,dgoal): {dx:5.3f},{dy:5.3f},{dgoal:5.3f} | "
+                               f"theta: {heading/np.pi*180:5.3f}| phi: {rel_bearing/np.pi*180:5.3f}")
 
         return self._obs_buffer
         
