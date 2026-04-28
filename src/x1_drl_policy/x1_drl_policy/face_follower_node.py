@@ -96,9 +96,10 @@ class FaceFollowerNode(Node):
         if self._last_goal_odom is not None:
             displacement = np.linalg.norm(goal_xy - self._last_goal_odom)
             time_elapsed = now - self._last_goal_time
-            if displacement < self.min_displacement and time_elapsed <= self.min_time_between_goals:
-                return
-            
+            self.get_logger().info(f"delta_t_goal: {time_elapsed:6.2f} | delta_d_goal: {displacement:5.2f}")
+            if displacement < self.min_displacement or time_elapsed <= self.min_time_between_goals:
+                return       
+        
         # --- 4. Send the goal pose
         self._update_goal(goal_xy, msg.header.stamp)
         self._last_goal_odom = goal_xy
