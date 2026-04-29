@@ -36,14 +36,6 @@ range_max:        8.00 m
 
 > The physical LiDAR reports ~340 points rather than the 360 used during training. The **min-pooling strategy** (grouping rays into 18 sectors) handles this discrepancy gracefully.
 
-### Network & ROS Communication
-
-| | Dev Machine | Robot |
-|---|---|---|
-| `ROS_DOMAIN_ID` | 6 | 6 |
-| `ROS_IP` | `131.202.12.48` | `192.168.0.141` |
-
-
 ---
 
 ## Package Overview
