@@ -66,30 +66,10 @@ class FaceDetectionNode(Node):
         )
 
         self.camera_info: CameraInfo | None = None
-        self.camera_info_sub = self.create_subscription(
-            CameraInfo,
-            '/camera/color/camera_info',
-            self.camera_info_callback,
-            10
-        )
-
-        self.crop_pub = self.create_publisher(
-            Image, 
-            '/face_crop', 
-            qos_profile=qos
-        )
-
-        self.detection_pub = self.create_publisher(
-            Detection2DArray,
-            '/face_detection',
-            qos_profile = qos
-        )
-
-        self.face_pose_pub = self.create_publisher(
-            PoseStamped,
-            '/face_pose',
-            10
-        )
+        self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/color/camera_info', self.camera_info_callback, 10)
+        self.crop_pub = self.create_publisher( Image, '/face_crop', qos_profile=qos)
+        self.detection_pub = self.create_publisher( Detection2DArray, '/face_detection', qos_profile = qos)
+        self.face_pose_pub = self.create_publisher( PoseStamped, '/face_pose', 10)
 
         # --- Declare variables
         self.face_x_smooth = 0.0
@@ -104,7 +84,7 @@ class FaceDetectionNode(Node):
             providers = [
                 ('TensorrtExecutionProvider', {
                     'device_id':                        0,
-                    'trt_max_workspace_size':           512 * 1024 * 1024,
+                    'trt_max_workspace_size':           256 * 1024 * 1024,
                     'trt_fp16_enable':                  True,
                     'trt_engine_cache_enable':          True,
                     'trt_engine_cache_path':            '/X1_ROS2_ws/src/x1_visual/models/face_detection',
