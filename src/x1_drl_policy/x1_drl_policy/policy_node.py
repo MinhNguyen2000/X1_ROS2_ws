@@ -31,8 +31,8 @@ class DRLPolicyNode(Node):
         self.declare_parameter('goal_tolerance', 0.5)
         self.declare_parameter('obstacle_tolerance', 0.20)
         self.declare_parameter('model_name', 'TD3_001')
-        self.declare_parameter('max_lin_vel', 1.2)
-        self.declare_parameter('max_angular_vel', 1.8)
+        self.declare_parameter('max_lin_vel', 0.2)
+        self.declare_parameter('max_angular_vel', 0.3)
         self.declare_parameter('goal_timeout', 30.0)
 
         self.default_goal_tolerance     = self.get_parameter('goal_tolerance').value
@@ -47,9 +47,27 @@ class DRLPolicyNode(Node):
         # Assume that the models and norm stats are stored under drl_policy/policy/TD3_xxx/model.zip and norm_stats.pkl
         pkg_dir = get_package_share_directory('x1_drl_policy')
         model_dir = os.path.join(pkg_dir, 'policies', self.model_name)
-        # model_path = os.path.join(model_dir, "model")
+        policy_weight_path = os.path.join(model_dir, "actor_weights.pt")
         norm_stat_path = os.path.join(model_dir, "norm_stats.npz")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # ===== Load norm stats =====
+        norm = np.load(norm_stat_path)
+        self.obs_mean    = norm["mean"].astype(np.float32)
+        self.obs_var     = norm["var"].astype(np.float32)
+        self.clip_obs    = float(norm["clip_obs"][0])
+
+        # # DEBUG - Check the loaded stats
+        # print(f"obs_mean shape: {self.obs_mean.shape}")   # should be (27,)
+        # print(f"obs_var shape:  {self.obs_var.shape}")    # should be (27,)
+        # print(f"clip_obs:       {self.clip_obs}")         # typically 10.0
+
+        # # Check mean/var per observation component
+        # labels = ["dx","dy","dgoal","c_head","s_head","c_bear","s_bear","vx","vyaw"] + [f"lidar_{i}" for i in range(18)]
+        # for i, label in enumerate(labels):
+        #     print(f"  {label:10s}  mean={self.obs_mean[i]: 7.4f}  std={np.sqrt(self.obs_var[i]):.4f}")
+
+        # ===== Load actor network =====
         self.policy = Actor(
             observation_space=gym.spaces.Box(low=-np.inf, high=np.inf, shape=(27,), dtype=np.float32),
             action_space=gym.spaces.Box(low=np.array([0.0, -1.0]), high=np.array([1.0, 1.0]), dtype=np.float32),
@@ -59,13 +77,12 @@ class DRLPolicyNode(Node):
             activation_fn=torch.nn.ReLU,
             normalize_images=False,
         ).to(self.device)
+        state = torch.load(policy_weight_path, map_location=self.device)
+        self.policy.load_state_dict(state)
         self.policy.eval()
 
-        # Load norm stats
-        norm = np.load(norm_stat_path)
-        self.obs_mean    = norm["mean"].astype(np.float32)
-        self.obs_var     = norm["var"].astype(np.float32)
-        self.clip_obs    = float(norm["clip_obs"][0])
+        # Test the loaded actor policy
+
 
         # TODO - read n_ray_groups and obs_space size dynamically from the loaded model
         self.n_ray_groups = 18
@@ -227,13 +244,6 @@ class DRLPolicyNode(Node):
             obs = self._get_obs(self.latest_odom, target, self.latest_scan)
 
             obs_normed = self._normalize_obs(obs)
-            
-            # self.get_logger().info(
-            #     f'obs → ({obs[0]: 5.3f} | {obs[1]: 5.3f} | {obs[2]: 5.3f})   '
-            #     f'({np.arctan2(obs[4], obs[3]): 5.3f} | {np.arctan2(obs[6], obs[5]): 5.3f})   '
-            #     f'({obs[7]: 5.3f}|{obs[8]: 5.3f})   '
-            #     f'lidar:{obs[9:]}'
-            # )
 
             # --- 2. Check termination conditions ---
             d_goal = obs[2]
@@ -266,7 +276,16 @@ class DRLPolicyNode(Node):
 
             self.action[0] = np.clip(self.action[0], 0.0, 1.0)
             self.action[1] = np.clip(self.action[1], -1.0, 1.0)
-            # self.get_logger().info(f"Policy action: {self.action[0]:5.3f}, {self.action[1]:5.3f}")
+
+            # # --- Debug prints ---
+            # self.get_logger().info(
+            #     f'obs → (dx={obs[0]: 5.3f} | dy={obs[1]: 5.3f} | dg={obs[2]: 5.3f}) \n'
+            #     f'(theta={np.arctan2(obs[4], obs[3])/np.pi*180: 5.2f} | phi={np.arctan2(obs[6], obs[5])/np.pi*180: 5.2f}) \n'
+            #     f'(vx={obs[7]: 5.3f} | vyaw={obs[8]: 5.3f}) \n'
+            #     f'Min LiDAR group idx: {np.argmin(obs[9:])} | {np.min(obs[9:])} \n'
+            #     f'lidar:{obs[9:]} \n'
+            #     f"Policy action: {self.action[0]:5.3f}, {self.action[1]:5.3f}"
+            # )
 
             self._get_rewards(obs)
 
@@ -356,8 +375,6 @@ class DRLPolicyNode(Node):
         self._obs_buffer[5:7] = c_bearing, s_bearing
         self._obs_buffer[7:9] = agent_vx, agent_vyaw
         self._obs_buffer[9:]  = lidar_obs
-        self.get_logger().info(f"(dx,dy,dgoal): {dx:5.3f},{dy:5.3f},{dgoal:5.3f} | "
-                               f"theta: {heading/np.pi*180:5.3f}| phi: {rel_bearing/np.pi*180:5.3f}")
 
         return self._obs_buffer
         
