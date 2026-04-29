@@ -84,6 +84,13 @@ class FaceFollowerNode(Node):
         pose_odom = self._transform_to_odom(msg)
         if pose_odom is None:
             return
+
+        self.get_logger().info(
+            f"face_pose in odom: x={pose_odom.pose.position.x: 5.3f}, "
+            f"y={pose_odom.pose.position.y: 5.3f}, "
+            f"z={pose_odom.pose.position.z: 5.3f}"   # z should be ~0 after ground projection
+        )
+
         
         # --- 2. Project pose onto odom x-y plane
         goal_xy = np.array([
@@ -96,7 +103,7 @@ class FaceFollowerNode(Node):
         if self._last_goal_odom is not None:
             displacement = np.linalg.norm(goal_xy - self._last_goal_odom)
             time_elapsed = now - self._last_goal_time
-            self.get_logger().info(f"delta_t_goal: {time_elapsed:6.2f} | delta_d_goal: {displacement:5.2f}")
+            # self.get_logger().info(f"delta_t_goal: {time_elapsed:6.2f} | delta_d_goal: {displacement:5.2f}")
             if displacement < self.min_displacement or time_elapsed <= self.min_time_between_goals:
                 return       
         
